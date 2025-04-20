@@ -26,8 +26,8 @@ default_tempalte = {
 }
 
 class Template:
-    def __init__(self, folder_name, cfg_sheet: ConfigSheet):
-        self.cfg_sheet = cfg_sheet
+    def __init__(self, data_row):
+        
 
 
 
