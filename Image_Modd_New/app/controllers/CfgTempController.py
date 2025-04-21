@@ -1,17 +1,18 @@
-
+from tkinter import Label, Entry, StringVar
 class CfgTempController:
     def __init__(self, model, view):
         self.model = model
         self.view = view
         self.frame = self.view.frames["cfg_template"]
-        self.column_title = self.model.config_sheet.data_column_title 
-
+        self.column_titles = self.model.config_sheet.data_column_title
+        self.template_selected_dict = {}
+        self.refresh_template_selected_dict()
         self._bind()
 
     def _bind(self):
-        print('invoked')
         self.frame.home_button.config(command = lambda: self.view.switch("home"))
         self.populate_dropdown_options()
+        self.populate_left_frame_labels()
         # self.frame.image_button.config(command = self.select_image)
         # self.frame.new_template_button.config(command = self.new_template)
         pass
@@ -20,10 +21,40 @@ class CfgTempController:
         self.frame.template_list = self.model.config_sheet.data.keys()
         menu = self.frame.template_select_dropdown['menu']
         menu.delete(0, "end")
-        for option in self.frame.template_list:
-            menu.add_command(label=option, command=lambda value=option: self.frame.template_selected_var.set(value))
-        self.frame.template_selected_var.set('Select Template')
         
+        for option in self.frame.template_list:
+            menu.add_command(label=option, command=lambda value=option: self.on_template_selected(value))
+        
+        self.frame.template_selected_var.set('Select Template')
+    def on_template_selected(self, val):
+        self.frame.template_selected_var.set(val)
+        self.refresh_template_selected_dict()
+        
+    def refresh_template_selected_dict(self):
+
+        folder_name = self.frame.template_selected_var.get()
+        data = self.model.config_sheet.data
+        
+        for key in self.column_titles:
+            if key not in self.template_selected_dict.keys():
+                print('error')
+                self.template_selected_dict[key] = StringVar()
+                
+            if folder_name == 'Select Template':
+                val = -1
+            else:
+                val = data[folder_name][key] 
+                
+            self.template_selected_dict[key].set(val)
         
     def populate_left_frame_labels(self):
+        for row_id, key in enumerate(self.template_selected_dict.keys()):
+            
+            Label(self.frame.scrollable_frame,text=key ).grid(row=row_id, column=0)
+            entry = Entry(self.frame.scrollable_frame ,textvariable= self.template_selected_dict[key] )
+            entry.grid(row = row_id, column= 1)
+            
+            self.frame.scrollable_frame_content[key] = entry
+            
+            
         pass

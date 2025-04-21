@@ -31,7 +31,8 @@ class ConfigTemplateView(Frame):
     def load_scrollable_frame (self):
         canvas = Canvas(self.left_frame)
         canvas.pack(side='left', fill='both', expand=True)
-        
+        canvas.bind_all("<MouseWheel>", lambda e: canvas.yview_scroll(-1*(e.delta//120), "units"))
+
         scrollbar = Scrollbar(self.left_frame, orient="vertical", command=canvas.yview)
         scrollbar.pack(side='right', fill='y')
         
