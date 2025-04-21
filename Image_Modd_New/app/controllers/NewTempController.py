@@ -1,6 +1,6 @@
-from tkinter import filedialog
-from tkinter import messagebox
+from tkinter import filedialog, messagebox
 from os.path import isfile
+
 class NewTempController:
     def __init__(self, model, view):
         self.model = model
