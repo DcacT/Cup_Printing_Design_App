@@ -31,7 +31,7 @@ class ConfigSheet:
     def __init__(self):
         self.sheet_path = self.get_sheet_path()
         self.data_rows = self.read_rows()
-        
+        print(self.data_rows)
         self.data_column_title = self.get_data_column_title()
         self.data = self.get_data_from_rows()
         pass
@@ -64,6 +64,7 @@ class ConfigSheet:
 
         rows = []
         with open(self.sheet_path) as file:
+            print(self.sheet_path)
             spamreader = csv.reader(file)
             
             for row in spamreader:
@@ -75,24 +76,23 @@ class ConfigSheet:
             return rows
         return None
     
-    def write_rows(self, update_row = None, delete = False):
-        
+    def write_rows(self, update_row = None, delete = False, new = False):
+        print('write')
         with open(self.sheet_path, 'w', newline= '') as f:
             writer = csv.writer(f)
             if update_row == None:
                 new_rows = self.data_rows
             else:
-                new_rows = []
-                for row in self.data_rows:
-                    if update_row[0] == row[0]:
-                        row = update_row  
-                        update_row = None
-                    if not delete:
+                new_rows = [] if not new else [self.data_rows[0], update_row]
+
+                for row in self.data_rows[1:]:
+                    if row[0] == update_row[0]:                            
+                        row = update_row
+                        if not delete:
+                            new_rows.append(row)
+                    else:
                         new_rows.append(row)
-
-                if update_row is not None and not delete:
-                    new_rows.append(update_row)
-
+                        
             writer.writerows(new_rows)
 
     def new_template(self, folder_name:str , image_path:str):
@@ -101,7 +101,7 @@ class ConfigSheet:
         print(self.data_column_title)
         for i in self.data_column_title[1:]:
             new_row.append(-1)
-        self.write_rows(update_row=new_row)
+        self.write_rows(update_row=new_row, new=True)
         self.data = self.get_data_from_rows()
 
 
@@ -116,7 +116,9 @@ class ConfigSheet:
         img = Image.open(image_path)
         img = img.save(new_image_path)
         
-
+    def delete_template(self, folder_name):
+        self.write_rows(update_row= [folder_name], delete=True)
+        pass
 
     def verify(self, folder_name):
         

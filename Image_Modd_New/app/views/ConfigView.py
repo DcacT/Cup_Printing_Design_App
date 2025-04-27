@@ -1,4 +1,4 @@
-from tkinter import OptionMenu, Frame, Label, Button, Scrollbar, Canvas, Listbox, END, StringVar
+from tkinter import OptionMenu, Frame, Label, Button, Scrollbar, Canvas, Listbox, END, StringVar,Checkbutton
 
 class ConfigTemplateView(Frame):
     def __init__(self, *args, **kwargs):
@@ -9,19 +9,28 @@ class ConfigTemplateView(Frame):
         self.drop_down_frame = Frame(self, bg='red')
         self.drop_down_frame.grid(row=0, column=0, sticky='w')
         self.template_select_dropdown = OptionMenu(self.drop_down_frame , self.template_selected_var, *self.template_list)
-        self.template_select_dropdown.pack( side='left',padx=5, pady=5, anchor='w')
+        self.template_select_dropdown.pack(padx=5, pady=5, anchor='w')
         
-        
-        self.left_frame = Frame(self, bg = 'blue')
+        self.left_frame = Frame(self)
         self.left_frame.grid(row=1, column=0)
+        self.delete_template_button = Button(self.left_frame, text='delete template')
+        self.delete_template_button.pack(padx=5, pady=5, anchor='w')
+        self.save_template_button = Button(self.left_frame, text='save template')
+        self.save_template_button.pack(padx=5, pady=5, anchor='w')
+                
+        checkbox = Checkbutton(self.left_frame, text="Check me!")
+        checkbox.pack(pady=10)
+
+        self.middle_frame = Frame(self, bg = 'blue')
+        self.middle_frame.grid(row=1, column=1)
         self.scrollable_frame = self.load_scrollable_frame()
         self.scrollable_frame_content = {}
 
         
         self.right_frame = Frame(self)
-        self.right_frame.grid(row = 1, column=1)
+        self.right_frame.grid(row = 1, column=2)
         self.img_label = Label(self.right_frame)
-        self.img_label.grid(row=1, column=1)
+        self.img_label.pack()
         
         self.home_button = Button(self, text="Home")
         self.home_button.grid(row = 2, column = 0)
@@ -29,11 +38,11 @@ class ConfigTemplateView(Frame):
     
         
     def load_scrollable_frame (self):
-        canvas = Canvas(self.left_frame)
+        canvas = Canvas(self.middle_frame)
         canvas.pack(side='left', fill='both', expand=True)
         canvas.bind_all("<MouseWheel>", lambda e: canvas.yview_scroll(-1*(e.delta//120), "units"))
 
-        scrollbar = Scrollbar(self.left_frame, orient="vertical", command=canvas.yview)
+        scrollbar = Scrollbar(self.middle_frame, orient="vertical", command=canvas.yview)
         scrollbar.pack(side='right', fill='y')
         
         canvas.configure(yscrollcommand=scrollbar.set)
