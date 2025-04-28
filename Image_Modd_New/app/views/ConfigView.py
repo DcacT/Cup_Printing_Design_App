@@ -52,3 +52,7 @@ class ConfigTemplateView(Frame):
         canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
 
         return scrollable_frame
+    
+    def reset(self):
+
+        pass

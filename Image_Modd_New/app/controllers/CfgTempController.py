@@ -11,15 +11,26 @@ class CfgTempController:
         self.populate_dropdown_options()
         self.populate_middle_frame_labels()
 
-
+        
         self._bind()
 
     def _bind(self):
         self.frame.home_button.config(command = lambda: self.view.switch("home"))
         self.frame.delete_template_button.config(command = lambda:self.on_select_delete_template())
-        # self.frame.image_button.config(command = self.select_image)
-        # self.frame.new_template_button.config(command = self.new_template)
+        self.frame.save_template_button.config(command = lambda:self.on_save_tempalte())
+        
+
+        self.frame.reset = self.populate_dropdown_options
         pass
+
+    def on_save_tempalte(self):
+        folder_name = self.frame.template_selected_var.get()
+        if folder_name == 'Select Template':
+            messagebox.showerror('Error', 'Template not selected')
+        
+        confirm = messagebox.askokcancel('Save Template Confirmation', f'Are you sure about saving template {folder_name}')
+        data = { k:v.get() for k, v in self.template_selected_dict.items()}
+        self.model.config_sheet.modify_template(data)
 
     def on_select_delete_template(self):
         folder_name = self.frame.template_selected_var.get()
@@ -30,14 +41,17 @@ class CfgTempController:
 
         if confirm:
             self.model.config_sheet.delete_template(self.frame.template_selected_var.get())
+            
+            self.populate_dropdown_options()
 
         # self.populate_dropdown_options()
         # self.refresh_template_selected_dict()
 
 
 
-
+    
     def populate_dropdown_options(self):
+        print('update')
         self.frame.template_list = self.model.config_sheet.data.keys()
         menu = self.frame.template_select_dropdown['menu']
         menu.delete(0, "end")
@@ -46,6 +60,7 @@ class CfgTempController:
             menu.add_command(label=option, command=lambda value=option: self.on_template_selected(value))
         
         self.frame.template_selected_var.set('Select Template')
+        
     def on_template_selected(self, val):
         self.frame.template_selected_var.set(val)
         self.refresh_template_selected_dict()

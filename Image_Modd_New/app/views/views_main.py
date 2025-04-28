@@ -8,7 +8,6 @@ class View:
     def __init__(self):
         self.root = Root()
         self.frames = {}
-
         # self._add_frame(SignUpView, "signup")
         # self._add_frame(SignInView, "signin")
         self._add_frame(NewTemplateView, "new_template")
@@ -20,10 +19,16 @@ class View:
         self.frames[name].grid(row=0, column=0, sticky="nsew")
 
     def switch(self, name):
+        for frame in self.frames.values():
+            frame.grid_remove()
         frame = self.frames[name]
+        frame.reset()
+        frame.grid()
         frame.tkraise()
-        self.root.update_idletasks()  # Make sure layout is updated
-        self.root.geometry(f"{frame.winfo_reqwidth()}x{frame.winfo_reqheight()}")
+        self.root.update()
+        self.root.geometry("")
+        
+        
         
     def start_mainloop(self):
         self.root.mainloop()

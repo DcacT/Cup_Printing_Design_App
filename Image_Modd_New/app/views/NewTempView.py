@@ -6,7 +6,7 @@ class NewTemplateView(Frame):
         self.folder_name_var = StringVar()
         self.image_path_var = StringVar()
 
-        self.grid_columnconfigure(0, weight=1)
+        # self.grid_columnconfigure(0, weight=1)
 
         self.header = Label(self, text="New Template")
         self.header.grid(row=0, column=0, padx=10, pady=10, sticky="ew")
@@ -27,3 +27,5 @@ class NewTemplateView(Frame):
         self.home_button = Button(self, text="home")
         self.home_button.grid(row=4, column=0, padx=10, pady=10)
 
+    def reset(self):
+        pass

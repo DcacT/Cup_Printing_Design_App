@@ -14,3 +14,7 @@ class HomeView(Frame):
 
         self.cfg_template_btn = Button(self, text="Modify Template")
         self.cfg_template_btn.grid(row=3, column=0, padx=10, pady=10)
+    
+    def reset(self):
+        pass
+        
