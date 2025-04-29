@@ -18,11 +18,16 @@ class CfgTempController:
         self.frame.home_button.config(command = lambda: self.view.switch("home"))
         self.frame.delete_template_button.config(command = lambda:self.on_select_delete_template())
         self.frame.save_template_button.config(command = lambda:self.on_save_tempalte())
-        
+        self.frame.display_contour_checkbox.config(command = lambda:self.on_display_contour_checkbox())
+
 
         self.frame.reset = self.populate_dropdown_options
         pass
 
+    def on_display_contour_checkbox(self):
+        checkbox_status = self.frame.display_contour_status.get()
+        print(checkbox_status)
+        
     def on_save_tempalte(self):
         folder_name = self.frame.template_selected_var.get()
         if folder_name == 'Select Template':
@@ -46,9 +51,6 @@ class CfgTempController:
 
         # self.populate_dropdown_options()
         # self.refresh_template_selected_dict()
-
-
-
     
     def populate_dropdown_options(self):
         print('update')
@@ -62,24 +64,27 @@ class CfgTempController:
         self.frame.template_selected_var.set('Select Template')
         
     def on_template_selected(self, val):
+        print('hui')
         self.frame.template_selected_var.set(val)
         self.refresh_template_selected_dict()
+        self.model.image_processor.load_template(val)
+        self.load_image()
         
     def refresh_template_selected_dict(self):
 
-        folder_name = self.frame.template_selected_var.get()
-        data = self.model.config_sheet.data
-        
-        for key in self.column_titles:
-            if key not in self.template_selected_dict.keys():
-                self.template_selected_dict[key] = StringVar()
-                
-            if folder_name == 'Select Template':
-                val = -1
-            else:
-                val = data[folder_name][key] 
-                
-            self.template_selected_dict[key].set(val)
+            folder_name = self.frame.template_selected_var.get()
+            data = self.model.config_sheet.data
+            
+            for key in self.column_titles:
+                if key not in self.template_selected_dict.keys():
+                    self.template_selected_dict[key] = StringVar()
+                    
+                if folder_name == 'Select Template':
+                    val = -1
+                else:
+                    val = data[folder_name][key] 
+                    
+                self.template_selected_dict[key].set(val)
         
     def populate_middle_frame_labels(self):
         for row_id, key in enumerate(self.template_selected_dict.keys()):
@@ -92,3 +97,9 @@ class CfgTempController:
             
             
         pass
+
+    def load_image(self):
+        img_tk = self.model.image_processor.get_display_image()
+        self.frame.img_label.config(image=img_tk)
+        self.frame.img_label.image = img_tk
+        
