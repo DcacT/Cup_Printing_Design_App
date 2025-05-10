@@ -31,7 +31,7 @@ class ConfigTemplateView(Frame):
         
         
         self.contour_list = [-1]
-        self.selected_contour_id = IntVar(value=0)
+        self.selected_contour_id = IntVar(value=-1)
         self.contour_select_dropdown = OptionMenu(self.left_frame, self.selected_contour_id,*self.contour_list)
         self.contour_select_dropdown.grid(row=3, column=0, sticky = 'w')
         

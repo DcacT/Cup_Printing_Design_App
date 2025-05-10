@@ -19,7 +19,6 @@ class ImageProcessor:
         pass
     
     def get_config(self, key):
-        print('t:',self.template_data)
         return float(self.template_data[key])
     
     def generate_contours(self):
@@ -28,10 +27,8 @@ class ImageProcessor:
         contours, _ = cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         new_contours = []
         for contour in contours:
-            print('PX_Min:', self.get_config('PX_Min'))
             if (len(contour) > self.get_config('PX_Min') 
             and len(contour) < self.get_config('PX_Max')):
-                print('pass1')
                 x, y, w, h = cv2.boundingRect(contour)  # Get bounding box (x, y, width, height)
                 aspect_ratio = w / h  # Width divided by height
 

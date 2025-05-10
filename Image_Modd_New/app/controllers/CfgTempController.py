@@ -32,7 +32,33 @@ class CfgTempController:
     
     def on_contour_selected(self):
         selected_contour_id = self.frame.selected_contour_id.get()
-        print(selected_contour_id)
+        menu = self.frame.contour_select_dropdown['menu']
+        menu.delete(0, "end")
+    
+        if selected_contour_id != -1:
+            try:
+                idx = self.frame.contour_list.index(selected_contour_id)
+                del self.frame.contour_list[idx]
+            except ValueError:
+                self.frame.contour_list = [selected_contour_id]+ self.frame.contour_list    
+
+                    
+        for option in self.frame.contour_list:
+            menu.add_command(label=option, command=lambda value=option: self.on_contour_drop_down_selected(value))
+        
+    def on_contour_drop_down_selected(self, val):
+        self.frame.selected_contour_id.set(val)
+        self.refresh_img_label()
+        
+    def populate_dropdown_options(self):
+        self.frame.template_list = self.model.config_sheet.data.keys()
+        menu = self.frame.template_select_dropdown['menu']
+        menu.delete(0, "end")
+        
+        for option in self.frame.template_list:
+            menu.add_command(label=option, command=lambda value=option: self.on_template_selected(value))
+        
+        self.frame.template_selected_var.set('Select Template')
     
     def on_next_or_prev_selected(self, go_next = True, count = 1):
         selected_contour_id = self.frame.selected_contour_id.get()
@@ -40,17 +66,11 @@ class CfgTempController:
         out_of_range = selected_contour_id + step < -1 or selected_contour_id + step >= len(self.model.image_processor.all_contours)
         result_contour_id = selected_contour_id + step if not out_of_range else selected_contour_id
         self.frame.selected_contour_id.set(result_contour_id)
-        print(result_contour_id)
-        display = self.frame.display_contour_status.get()
-        self.model.image_processor.display_contours(target_contour= result_contour_id, highlight_contour_list = [], display = display)
-        img_tk = self.model.image_processor.get_display_image()
-        self.frame.img_label.config(image=img_tk)
-        self.frame.img_label.image = img_tk    
+        self.refresh_img_label()
+
     
-                
     def on_select_update_image(self):
         data = { k:v.get() for k, v in self.template_selected_dict.items()}
-        print('DATA: ', data)
         self.model.image_processor.load_template(template_data = data)
         len_of_all_contours = len(self.model.image_processor.all_contours)
         self.frame.total_contour_count_var.set(f'/0 - {len_of_all_contours -1}')
@@ -58,13 +78,7 @@ class CfgTempController:
 
         
     def on_display_contour_checkbox(self):
-        checkbox_status = self.frame.display_contour_status.get()
-        
-        self.model.image_processor.display_contours(display = checkbox_status)
-        
-        img_tk = self.model.image_processor.get_display_image()
-        self.frame.img_label.config(image=img_tk)
-        self.frame.img_label.image = img_tk    
+        self.refresh_img_label()
           
     def on_save_tempalte(self):
         folder_name = self.frame.template_selected_var.get()
@@ -89,17 +103,6 @@ class CfgTempController:
 
         # self.populate_dropdown_options()
         # self.refresh_template_selected_dict()
-    
-    def populate_dropdown_options(self):
-        print('update')
-        self.frame.template_list = self.model.config_sheet.data.keys()
-        menu = self.frame.template_select_dropdown['menu']
-        menu.delete(0, "end")
-        
-        for option in self.frame.template_list:
-            menu.add_command(label=option, command=lambda value=option: self.on_template_selected(value))
-        
-        self.frame.template_selected_var.set('Select Template')
         
     def on_template_selected(self, val):
         self.frame.template_selected_var.set(val)
@@ -142,4 +145,11 @@ class CfgTempController:
         img_tk = self.model.image_processor.get_display_image()
         self.frame.img_label.config(image=img_tk)
         self.frame.img_label.image = img_tk
-        
+    
+    
+    def refresh_img_label(self):
+        self.model.image_processor.display_contours(
+            target_contour= self.frame.selected_contour_id.get(), 
+            highlight_contour_list = self.frame.contour_list[:-1], #omit -1
+            display = self.frame.display_contour_status.get())
+        self.load_image()

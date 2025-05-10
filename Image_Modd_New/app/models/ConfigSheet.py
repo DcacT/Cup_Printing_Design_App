@@ -47,12 +47,10 @@ class ConfigSheet:
     def get_data_from_rows(self):
 
         data = {}
-        print('self.data_rows', self.data_rows)
         for row in self.data_rows[1:]:
             data[row[0]] = {}
             for idx, val in enumerate(row):
                 data[row[0]][self.data_column_title[idx]] = val
-        print(data)
         return data
     
     def read_rows(self, folder_name = None):
@@ -71,13 +69,11 @@ class ConfigSheet:
                 if row[0] == folder_name:
                     return row
                 
-        print('rows:', rows)
         if folder_name == None:
             return rows
         return None
     
     def write_rows(self, update_row = None, delete = False, new = False):
-        print('write')
         with open(self.sheet_path, 'w', newline= '') as f:
             writer = csv.writer(f)
             if update_row == None:
@@ -118,11 +114,9 @@ class ConfigSheet:
         img = img.save(new_image_path)
         
     def modify_template(self, data):
-        print('modify : ', data.values())
         self.write_rows(update_row= [i for i in data.values()])
 
     def delete_template(self, folder_name):
-        print('delete ', folder_name)
         self.write_rows(update_row= [folder_name], delete=True)
         self_path = os.path.dirname(os.path.realpath(__file__))
         path = os.path.join(self_path, '../../data/templates/', folder_name,'template_image.png' )
