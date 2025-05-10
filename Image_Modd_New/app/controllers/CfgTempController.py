@@ -19,15 +19,53 @@ class CfgTempController:
         self.frame.delete_template_button.config(command = lambda:self.on_select_delete_template())
         self.frame.save_template_button.config(command = lambda:self.on_save_tempalte())
         self.frame.display_contour_checkbox.config(command = lambda:self.on_display_contour_checkbox())
-
+        self.frame.update_image_button.config(command = lambda:self.on_select_update_image())
+        
+        self.frame.select_contour_button.config(command = lambda:self.on_contour_selected())
+        self.frame.prev_prev_contour_button.config(command = lambda:self.on_next_or_prev_selected(go_next=False, count = 5))
+        self.frame.prev_contour_button.config(command = lambda:self.on_next_or_prev_selected(go_next=False, count = 1))
+        self.frame.next_contour_button.config(command = lambda:self.on_next_or_prev_selected(go_next=True, count = 1))
+        self.frame.next_next_contour_button.config(command = lambda:self.on_next_or_prev_selected(go_next=True, count = 5))
 
         self.frame.reset = self.populate_dropdown_options
         pass
+    
+    def on_contour_selected(self):
+        selected_contour_id = self.frame.selected_contour_id.get()
+        print(selected_contour_id)
+    
+    def on_next_or_prev_selected(self, go_next = True, count = 1):
+        selected_contour_id = self.frame.selected_contour_id.get()
+        step = count if go_next else count * -1
+        out_of_range = selected_contour_id + step < -1 or selected_contour_id + step >= len(self.model.image_processor.all_contours)
+        result_contour_id = selected_contour_id + step if not out_of_range else selected_contour_id
+        self.frame.selected_contour_id.set(result_contour_id)
+        print(result_contour_id)
+        display = self.frame.display_contour_status.get()
+        self.model.image_processor.display_contours(target_contour= result_contour_id, highlight_contour_list = [], display = display)
+        img_tk = self.model.image_processor.get_display_image()
+        self.frame.img_label.config(image=img_tk)
+        self.frame.img_label.image = img_tk    
+    
+                
+    def on_select_update_image(self):
+        data = { k:v.get() for k, v in self.template_selected_dict.items()}
+        print('DATA: ', data)
+        self.model.image_processor.load_template(template_data = data)
+        len_of_all_contours = len(self.model.image_processor.all_contours)
+        self.frame.total_contour_count_var.set(f'/0 - {len_of_all_contours -1}')
+        self.on_display_contour_checkbox()
 
+        
     def on_display_contour_checkbox(self):
         checkbox_status = self.frame.display_contour_status.get()
-        print(checkbox_status)
         
+        self.model.image_processor.display_contours(display = checkbox_status)
+        
+        img_tk = self.model.image_processor.get_display_image()
+        self.frame.img_label.config(image=img_tk)
+        self.frame.img_label.image = img_tk    
+          
     def on_save_tempalte(self):
         folder_name = self.frame.template_selected_var.get()
         if folder_name == 'Select Template':
@@ -64,11 +102,13 @@ class CfgTempController:
         self.frame.template_selected_var.set('Select Template')
         
     def on_template_selected(self, val):
-        print('hui')
         self.frame.template_selected_var.set(val)
         self.refresh_template_selected_dict()
-        self.model.image_processor.load_template(val)
+        self.model.image_processor.load_template(template_folder_name = val)
+        len_of_all_contours = len(self.model.image_processor.all_contours)
+        self.frame.total_contour_count_var.set(f'/0 - {len_of_all_contours -1}')
         self.load_image()
+        
         
     def refresh_template_selected_dict(self):
 

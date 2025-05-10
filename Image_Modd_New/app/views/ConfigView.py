@@ -26,7 +26,7 @@ class ConfigTemplateView(Frame):
         self.display_contour_checkbox.grid(row=2, column=0,columnspan=2)
         
         self.dislpay_border_status = IntVar()
-        self.display_border_checkbox = Checkbutton(self.left_frame, text="left border", variable=self.dislpay_border_status, onvalue=1, offvalue=0)
+        self.display_border_checkbox = Checkbutton(self.left_frame, text="borders", variable=self.dislpay_border_status, onvalue=1, offvalue=0)
         self.display_border_checkbox.grid(row=2, column=2,columnspan=2)
         
         
@@ -61,6 +61,9 @@ class ConfigTemplateView(Frame):
 
         self.select_contour_button = Button(self.left_frame, text='De/Select Contour')
         self.select_contour_button.grid(row=5, column=0, columnspan=4 ,sticky="ew")
+        
+        self.generate_border_button = Button(self.left_frame, text='Generate Border')
+        self.generate_border_button.grid(row=6, column=0, columnspan=4 ,sticky="ew")
 
 
         
