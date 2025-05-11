@@ -25,8 +25,8 @@ class ConfigTemplateView(Frame):
         self.display_contour_checkbox = Checkbutton(self.left_frame, text="contour", variable=self.display_contour_status, onvalue=1, offvalue=0)
         self.display_contour_checkbox.grid(row=2, column=0,columnspan=2)
         
-        self.dislpay_border_status = IntVar()
-        self.display_border_checkbox = Checkbutton(self.left_frame, text="borders", variable=self.dislpay_border_status, onvalue=1, offvalue=0)
+        self.display_border_status = IntVar()
+        self.display_border_checkbox = Checkbutton(self.left_frame, text="borders", variable=self.display_border_status, onvalue=1, offvalue=0)
         self.display_border_checkbox.grid(row=2, column=2,columnspan=2)
         
         
@@ -40,10 +40,10 @@ class ConfigTemplateView(Frame):
         self.total_contour_count_label.grid(row=3, column=1)
 
         self.action_list = [
-            'Left Border       ',
-            'Right Border      ',
-            'Top Border        ',
-            'Bottom Border     ',
+            'Left Border',
+            'Right Border',
+            'Top Border',
+            'Bottom Border',
         ]
         self.selected_action = StringVar(value='No Action Selected')
         self.action_select_drop_down = OptionMenu(self.left_frame, self.selected_action, *self.action_list)

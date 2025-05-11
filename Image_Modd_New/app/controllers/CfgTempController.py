@@ -26,10 +26,45 @@ class CfgTempController:
         self.frame.prev_contour_button.config(command = lambda:self.on_next_or_prev_selected(go_next=False, count = 1))
         self.frame.next_contour_button.config(command = lambda:self.on_next_or_prev_selected(go_next=True, count = 1))
         self.frame.next_next_contour_button.config(command = lambda:self.on_next_or_prev_selected(go_next=True, count = 5))
+        
+        self.frame.display_border_checkbox.config(command = lambda:self.on_display_contour_checkbox())
+        self.frame.generate_border_button.config(command = lambda:self.generate_border())
+
 
         self.frame.reset = self.populate_dropdown_options
         pass
-    
+        
+    def generate_border(self):
+        selected_border = self.frame.selected_action.get()
+        if selected_border == 'No Action Selected':
+            messagebox.showerror('Error','No Action Selected')
+        else:
+            contour_list = self.frame.contour_list[:-1] #omit -1
+            if len(contour_list) <= 0:
+                messagebox.showerror('Error','No Contour Selected')
+            else:
+                result = self.model.image_processor.generate_border(selected_border,contour_list)
+                location = selected_border.split(' ')[0] 
+                
+                if location == 'Left':
+                    self.template_selected_dict['Line_1_vx'].set(result[0]) 
+                    self.template_selected_dict['Line_1_vy'].set(result[1]) 
+                    self.template_selected_dict['Line_1_x0'].set(result[2]) 
+                    self.template_selected_dict['Line_1_y0'].set(result[3]) 
+                elif location == 'Right':
+                    self.template_selected_dict['Line_2_vx'].set(result[0]) 
+                    self.template_selected_dict['Line_2_vy'].set(result[1]) 
+                    self.template_selected_dict['Line_2_x0'].set(result[2]) 
+                    self.template_selected_dict['Line_2_y0'].set(result[3]) 
+                elif location == 'Top':
+                    self.template_selected_dict['Arc_1_x'].set(result[0]) 
+                    self.template_selected_dict['Arc_1_y'].set(result[1]) 
+                    self.template_selected_dict['Arc_1_r'].set(result[2]) 
+                elif location == 'Bottom':
+                    self.template_selected_dict['Arc_2_x'].set(result[0]) 
+                    self.template_selected_dict['Arc_2_y'].set(result[1]) 
+                    self.template_selected_dict['Arc_2_r'].set(result[2]) 
+        
     def on_contour_selected(self):
         selected_contour_id = self.frame.selected_contour_id.get()
         menu = self.frame.contour_select_dropdown['menu']
@@ -148,8 +183,11 @@ class CfgTempController:
     
     
     def refresh_img_label(self):
+        
         self.model.image_processor.display_contours(
             target_contour= self.frame.selected_contour_id.get(), 
             highlight_contour_list = self.frame.contour_list[:-1], #omit -1
             display = self.frame.display_contour_status.get())
+        self.model.image_processor.display_border(
+            display = self.frame.display_border_status.get())
         self.load_image()

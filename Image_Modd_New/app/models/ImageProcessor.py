@@ -2,6 +2,7 @@ import os
 import cv2
 import numpy as np
 from PIL import Image,ImageTk
+from scipy.optimize import leastsq
 
 class ImageProcessor:
     def __init__(self, config_sheet):
@@ -89,3 +90,121 @@ class ImageProcessor:
         img_pil = Image.fromarray(img_resize)
         img_tk = ImageTk.PhotoImage(img_pil)
         return img_tk
+    
+        
+    def generate_border(self, action, selected_contour_idx_list = []):
+        location = action.split(' ')[0] 
+        print(location)
+        
+        if location == 'Left' or location == 'Right':
+            result = self.calculate_straight(selected_contour_idx_list)
+        elif location == 'Top' or location == 'Bottom':
+            result = self.calculate_arc(selected_contour_idx_list)
+        return result
+    
+    
+    def calculate_straight(self, selected_contour_index_list = []):
+        straight_contours = [self.all_contours[idx] for idx in selected_contour_index_list]
+        best_fit_straight_lines = []
+
+        for contour in straight_contours:
+                    [vx, vy, x0, y0] = cv2.fitLine(contour, cv2.DIST_L2, 0, 0.01, 0.01)
+                    best_fit_straight_lines.append((float(vx), float(vy), float(x0), float(y0)))        
+        data_array = np.array(best_fit_straight_lines)  # get ag
+        
+        (avg_vx, avg_vy, avg_x0, avg_y0) = np.mean(data_array, axis=0)
+        print('avg_line1 stats: ', avg_vx, avg_vy, avg_x0, avg_y0)
+        return (avg_vx, avg_vy, avg_x0, avg_y0)
+    
+    
+    def calculate_arc(self, elected_contour_index_list = []):
+        arc_contours = [self.all_contours[idx] for idx in elected_contour_index_list]
+
+        x = []
+        y = []
+        for contour in arc_contours:
+            for point in contour:
+                x.append(point[0].tolist()[0])
+                y.append(point[0].tolist()[1])
+        x_m = np.mean(x)
+        y_m = np.mean(y)
+
+        def calc_R(xc, yc):
+            return np.sqrt((x - xc) ** 2 + (y - yc) ** 2)
+
+        def f(c):
+            """Calculate the algebraic distance between the fitted circle and the data points."""
+            Ri = calc_R(*c)
+            return Ri - Ri.mean()
+        
+        # Solve for the best-fitting center
+        center_estimate = x_m, y_m
+        center, _ = leastsq(f, center_estimate)
+
+        # Compute final radius
+        Ri = calc_R(*center)
+        radius = Ri.mean()
+
+        #round
+        center_x = int(round(center[0]))
+        center_y = int(round(center[1]))
+        radius = int(round(radius))
+        print(center_x, center_y, radius)
+        
+        return (center_x, center_y, radius)
+    
+
+
+    def display_border(self, display = False):
+        if display:
+            #potential bug where value is actually -1.0
+            display_arc1 = '-1' not in [self.template_data['Arc_1_x'], self.template_data['Arc_1_y'], self.template_data['Arc_1_r']]
+            display_arc2 = '-1' not in [self.template_data['Arc_2_x'], self.template_data['Arc_2_y'], self.template_data['Arc_2_r']]
+            display_line1 = '-1' not in [self.template_data['Line_1_vx'], self.template_data['Line_1_vy'], self.template_data['Line_1_x0'], self.template_data['Line_1_y0']]
+            display_line2 = '-1' not in [self.template_data['Line_2_vx'], self.template_data['Line_2_vy'], self.template_data['Line_2_x0'], self.template_data['Line_2_y0'], ]
+            self.apply_arc(display_arc1, display_arc2)
+            self.apply_straight(display_line1, display_line2)
+
+    def apply_arc(self, display_arc1 = False, display_arc2 = False):
+        img = self.processed_template_image        
+        
+        if display_arc1:
+            x = self.template_data['Arc_1_x']
+            y = self.template_data['Arc_1_y']
+            r = self.template_data['Arc_1_r']
+            
+            cv2.circle(img, (int(x), int(y)), int(r) ,(0, 0, 255), 2)
+        
+        if display_arc2:
+            x = self.template_data['Arc_2_x']
+            y = self.template_data['Arc_2_y']
+            r = self.template_data['Arc_2_r']
+            cv2.circle(img, (int(x), int(y)), int(r) ,(0, 0, 255), 2)
+        
+        self.processed_template_image = img
+
+    def apply_straight(self,display_line1 = False, display_line2 = False):
+        img = self.processed_template_image        
+
+        height, width = img.shape[:2]
+        line_length = max(width, height)  # Extend long enough
+
+        if display_line1:
+            x0 = float(self.template_data['Line_1_x0'])
+            y0 = float(self.template_data['Line_1_y0'])
+            vx = float(self.template_data['Line_1_vx'])
+            vy = float(self.template_data['Line_1_vy'])
+            x1, y1 = int(x0 - vx * line_length), int(y0 - vy * line_length)
+            x2, y2 = int(x0 + vx * line_length), int(y0 + vy * line_length)
+            cv2.line(img, (x1, y1), (x2, y2), (0, 255, 0), 2)        
+
+        if display_line2:
+            x0 = float(self.template_data['Line_2_x0'])
+            y0 = float(self.template_data['Line_2_y0'])
+            vx = float(self.template_data['Line_2_vx'])
+            vy = float(self.template_data['Line_2_vy'])
+            x1, y1 = int(x0 - vx * line_length), int(y0 - vy * line_length)
+            x2, y2 = int(x0 + vx * line_length), int(y0 + vy * line_length)
+            cv2.line(img, (x1, y1), (x2, y2), (0, 255, 0), 2)  
+        
+        self.processed_template_image = img
