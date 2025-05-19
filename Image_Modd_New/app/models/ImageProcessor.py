@@ -3,12 +3,12 @@ import cv2
 import numpy as np
 from PIL import Image,ImageTk
 from scipy.optimize import leastsq
-
+import logging
 class ImageProcessor:
-    def __init__(self, config_sheet):
+    def __init__(self, template_manager):
         self.template_folder_name = ""
-        self.template_data = {}
-        self.config_sheet = config_sheet
+        self.template = {}
+        self.template_manager = template_manager
         
         self.base_template_image = None
         self.processed_template_image = None
@@ -20,7 +20,7 @@ class ImageProcessor:
         pass
     
     def get_config(self, key):
-        return float(self.template_data[key])
+        return float(self.template[key])
     
     def generate_contours(self):
         gray = cv2.cvtColor(self.base_template_image, cv2.COLOR_BGR2GRAY)
@@ -68,11 +68,11 @@ class ImageProcessor:
 
         self.processed_template_image = shape_image if display else self.base_template_image
     
-    def load_template(self, template_folder_name = None, template_data = None):
-        
-        self.template_folder_name = template_folder_name if template_folder_name is not None else template_data['folder_name']
-        self.template_data = template_data if template_data is not None else self.config_sheet.data[template_folder_name] 
-        
+    def load_template(self, template_folder_name = None, template = None):
+
+        self.template_folder_name = template_folder_name if template_folder_name is not None else template['folder_name']
+        self.template = template if template is not None else self.template_manager.templates[template_folder_name] 
+        logging.debug(f'template: {self.template}')
         self.load_base_template_image()
         self.processed_template_image = self.base_template_image
         self.generate_contours()
@@ -158,10 +158,10 @@ class ImageProcessor:
     def display_border(self, display = False):
         if display:
             #potential bug where value is actually -1.0
-            display_arc1 = '-1' not in [self.template_data['Arc_1_x'], self.template_data['Arc_1_y'], self.template_data['Arc_1_r']]
-            display_arc2 = '-1' not in [self.template_data['Arc_2_x'], self.template_data['Arc_2_y'], self.template_data['Arc_2_r']]
-            display_line1 = '-1' not in [self.template_data['Line_1_vx'], self.template_data['Line_1_vy'], self.template_data['Line_1_x0'], self.template_data['Line_1_y0']]
-            display_line2 = '-1' not in [self.template_data['Line_2_vx'], self.template_data['Line_2_vy'], self.template_data['Line_2_x0'], self.template_data['Line_2_y0'], ]
+            display_arc1 = '-1' not in [self.template['Arc_1_x'], self.template['Arc_1_y'], self.template['Arc_1_r']]
+            display_arc2 = '-1' not in [self.template['Arc_2_x'], self.template['Arc_2_y'], self.template['Arc_2_r']]
+            display_line1 = '-1' not in [self.template['Line_1_vx'], self.template['Line_1_vy'], self.template['Line_1_x0'], self.template['Line_1_y0']]
+            display_line2 = '-1' not in [self.template['Line_2_vx'], self.template['Line_2_vy'], self.template['Line_2_x0'], self.template['Line_2_y0'], ]
             self.apply_arc(display_arc1, display_arc2)
             self.apply_straight(display_line1, display_line2)
 
@@ -169,16 +169,16 @@ class ImageProcessor:
         img = self.processed_template_image        
         
         if display_arc1:
-            x = self.template_data['Arc_1_x']
-            y = self.template_data['Arc_1_y']
-            r = self.template_data['Arc_1_r']
+            x = self.template['Arc_1_x']
+            y = self.template['Arc_1_y']
+            r = self.template['Arc_1_r']
             
             cv2.circle(img, (int(x), int(y)), int(r) ,(0, 0, 255), 2)
         
         if display_arc2:
-            x = self.template_data['Arc_2_x']
-            y = self.template_data['Arc_2_y']
-            r = self.template_data['Arc_2_r']
+            x = self.template['Arc_2_x']
+            y = self.template['Arc_2_y']
+            r = self.template['Arc_2_r']
             cv2.circle(img, (int(x), int(y)), int(r) ,(0, 0, 255), 2)
         
         self.processed_template_image = img
@@ -190,19 +190,19 @@ class ImageProcessor:
         line_length = max(width, height)  # Extend long enough
 
         if display_line1:
-            x0 = float(self.template_data['Line_1_x0'])
-            y0 = float(self.template_data['Line_1_y0'])
-            vx = float(self.template_data['Line_1_vx'])
-            vy = float(self.template_data['Line_1_vy'])
+            x0 = float(self.template['Line_1_x0'])
+            y0 = float(self.template['Line_1_y0'])
+            vx = float(self.template['Line_1_vx'])
+            vy = float(self.template['Line_1_vy'])
             x1, y1 = int(x0 - vx * line_length), int(y0 - vy * line_length)
             x2, y2 = int(x0 + vx * line_length), int(y0 + vy * line_length)
             cv2.line(img, (x1, y1), (x2, y2), (0, 255, 0), 2)        
 
         if display_line2:
-            x0 = float(self.template_data['Line_2_x0'])
-            y0 = float(self.template_data['Line_2_y0'])
-            vx = float(self.template_data['Line_2_vx'])
-            vy = float(self.template_data['Line_2_vy'])
+            x0 = float(self.template['Line_2_x0'])
+            y0 = float(self.template['Line_2_y0'])
+            vx = float(self.template['Line_2_vx'])
+            vy = float(self.template['Line_2_vy'])
             x1, y1 = int(x0 - vx * line_length), int(y0 - vy * line_length)
             x2, y2 = int(x0 + vx * line_length), int(y0 + vy * line_length)
             cv2.line(img, (x1, y1), (x2, y2), (0, 255, 0), 2)  

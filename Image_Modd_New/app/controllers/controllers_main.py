@@ -12,10 +12,4 @@ class Controller:
         self.CfgTempController = CfgTempController(model, view)
 
     def start(self):
-        # self.model.auth.load_auth_state()
-        # if self.model.auth.is_logged_in:
-        #     self.view.switch("home")
-        # else:
-        #     self.view.switch("signin")
-
         self.view.start_mainloop()

@@ -22,7 +22,7 @@ class NewTempController:
         folder_name = self.frame.folder_name_var.get()
         image_path = self.frame.image_path_var.get()
         #verify folder name 
-        verify = self.model.config_sheet.verify(folder_name)
+        verify = self.model.template_manager.verify(folder_name)
         if not verify:
             messagebox.showerror('Error', "Invalid Template Name! Try Another One")
             return 
@@ -32,6 +32,6 @@ class NewTempController:
             messagebox.showerror('Error', "Invalid Image! Try Another One")
             return
 
-        self.model.config_sheet.new_template(folder_name,image_path)
+        self.model.template_manager.new_template(folder_name,image_path)
         #success
         messagebox.showinfo('Success', "Template Created! Head over to Template Configuration next to configure via Home please")
