@@ -15,21 +15,21 @@ class CfgTempController:
         self._bind()
 
     def _bind(self):
-        self.frame.home_button.config(command = lambda: self.view.switch("home"))
-        self.frame.delete_template_button.config(command = lambda:self.on_select_delete_template())
-        self.frame.save_template_button.config(command = lambda:self.on_save_tempalte())
-        self.frame.display_contour_checkbox.config(command = lambda:self.on_display_contour_checkbox())
-        self.frame.update_image_button.config(command = lambda:self.on_select_update_image())
-        
-        self.frame.select_contour_button.config(command = lambda:self.on_contour_selected())
-        self.frame.prev_prev_contour_button.config(command = lambda:self.on_next_or_prev_selected(go_next=False, count = 5))
-        self.frame.prev_contour_button.config(command = lambda:self.on_next_or_prev_selected(go_next=False, count = 1))
-        self.frame.next_contour_button.config(command = lambda:self.on_next_or_prev_selected(go_next=True, count = 1))
-        self.frame.next_next_contour_button.config(command = lambda:self.on_next_or_prev_selected(go_next=True, count = 5))
-        
-        self.frame.display_border_checkbox.config(command = lambda:self.on_display_contour_checkbox())
-        self.frame.generate_border_button.config(command = lambda:self.generate_border())
+        self.frame.home_button.config(command=lambda: self.view.switch("home"))
 
+        self.frame.delete_template_button.config(command=self.on_select_delete_template)
+        self.frame.save_template_button.config(command=self.on_save_tempalte)
+        self.frame.display_contour_checkbox.config(command=self.on_display_contour_checkbox)
+        self.frame.update_image_button.config(command=self.on_select_update_image)
+
+        self.frame.select_contour_button.config(command=self.on_contour_selected)
+        self.frame.prev_prev_contour_button.config(command=lambda: self.on_next_or_prev_selected(go_next=False, count=5))
+        self.frame.prev_contour_button.config(command=lambda: self.on_next_or_prev_selected(go_next=False, count=1))
+        self.frame.next_contour_button.config(command=lambda: self.on_next_or_prev_selected(go_next=True, count=1))
+        self.frame.next_next_contour_button.config(command=lambda: self.on_next_or_prev_selected(go_next=True, count=5))
+
+        self.frame.display_border_checkbox.config(command=self.on_display_contour_checkbox)
+        self.frame.generate_border_button.config(command=self.generate_border)
 
         self.frame.reset = self.populate_dropdown_options
         pass
@@ -160,7 +160,7 @@ class CfgTempController:
     def on_template_selected(self, val):
         self.frame.template_selected_var.set(val)
         self.refresh_template_selected_dict()
-        self.model.image_processor.load_template(template_folder_name = val)
+        self.model.image_processor.load_template(template_name = val)
         len_of_all_contours = len(self.model.image_processor.all_contours)
         self.frame.total_contour_count_var.set(f'/0 - {len_of_all_contours -1}')
         self.load_image()

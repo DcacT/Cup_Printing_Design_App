@@ -2,11 +2,16 @@ from ..sql.sql_helper import sql
 import os 
 from PIL import Image
 import re
+import inspect
+
+self_path = os.path.dirname(os.path.realpath(__file__))
+template_folder_path = os.path.join( self_path,'../../data/templates/')
 
 class TemplateManager:
     def __init__(self):
         self.column_titles = []
         self.templates = {}
+        self.template_folder_path = os.path.join( self_path,'../../data/templates/')
         self.refresh()
         
     def refresh(self):
@@ -23,7 +28,6 @@ class TemplateManager:
             data[row[0]] = {} 
             for idx, val in enumerate(row):
                 data[row[0]][self.column_titles[idx]] = val
-        print(data)
         return data
             
     def get_column_title(self):
@@ -34,32 +38,28 @@ class TemplateManager:
         res = sql(msg)
         return [row[1] for row in res]
         
-    def new_template(self, folder_name, image_path):
+    def new_template(self, template_name, image_path):
         #sql
         msg = f"""
-        INSERT INTO templates VALUES({','.join([f"'{folder_name}'"] + ['-1'] * (len(self.column_titles) - 1))})
+        INSERT INTO templates VALUES({','.join([f"'{template_name}'"] + ['-1'] * (len(self.column_titles) - 1))})
         """
         res = sql(msg)
-        #dir
-        self_path = os.path.dirname(os.path.realpath(__file__))
-        folder_name =os.path.join( self_path,'../../data/templates/',folder_name)
-        os.makedirs(folder_name, exist_ok=True)    
         #img
-        new_image_path = os.path.join(folder_name, 'template_image.png')
+        img_path = os.path.join(self.template_folder_path, f'template_{template_name}.png')
         img = Image.open(image_path)
-        img = img.save(new_image_path)
+        img = img.save(img_path)
+
         self.refresh()
 
     def update_template(self, val):
         
         if isinstance(val, dict):
             val = list(val.values())
-        print(val)
-        folder_name = val[0]
+        template_name = val[0]
         msg = f"""
         UPDATE templates
         SET {','.join(map(lambda idx: self.column_titles[idx + 1] + ' = ' + str(val[idx + 1]), range(len(self.column_titles)- 1)))}
-        WHERE folder_name = '{folder_name}'
+        WHERE Template_Name = '{template_name}'
         """
         sql(msg)
         self.refresh()
@@ -68,33 +68,29 @@ class TemplateManager:
         if isinstance(val, dict):
             val = val.values
         if isinstance(val, list):
-            folder_name = val[0]
-        folder_name = val
+            template_name = val[0]
+        template_name = val
         #sql
         msg = f"""
-        DELETE FROM templates WHERE folder_name = '{folder_name}'
+        DELETE FROM templates WHERE Template_Name = '{template_name}'
         """
         sql(msg)
         #img
-        self_path = os.path.dirname(os.path.realpath(__file__))
-        image_path =os.path.join( self_path,'../../data/templates/',folder_name, 'template_image.png')
-        os.remove(image_path)
-        folder_path =os.path.join( self_path,'../../data/templates/',folder_name)
-        os.rmdir(folder_path)        
+        img_path = os.path.join(self.template_folder_path, f'template_{template_name}.png')
+        os.remove(img_path)
         self.refresh()
 
         
-    def verify(self, folder_name):
-        banned_words = ['folder_name', '']    
-        if folder_name in banned_words:
+    def verify(self, template_name):
+        banned_words = ['Template_Name', '']    
+        if template_name in banned_words:
             return False
-        if not is_valid_windows_directory_name(folder_name):
+        if not is_valid_windows_directory_name(template_name):
             return False
         msg = f"""
-        SELECT * FROM templates WHERE folder_name = '{folder_name}'
+        SELECT * FROM templates WHERE Template_Name = '{template_name}'
         """
         res = sql(msg)
-        print('len:',len(res))
         if len(res) != 0: 
             return False
         return True

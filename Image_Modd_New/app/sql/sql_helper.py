@@ -8,14 +8,19 @@ self_path = os.path.dirname(os.path.realpath(__file__))
 db_path= os.path.join(self_path,'data.db' )
 
 
-def sql(prompt_msg):
+def sql(prompt_msg, db_path = db_path):
     prompt_msg = prompt_msg.rstrip()
     logger.info(f'Executing SQL: {prompt_msg}')
     
     try:
         with sqlite3.connect(db_path) as conn:
             cursor = conn.cursor()
-            cursor.execute(prompt_msg)
+            print(len(prompt_msg.split(';')))
+            if len(prompt_msg.split(';')) <= 2:
+                cursor.execute(prompt_msg)
+            else: 
+                cursor.executescript(prompt_msg)
+
             
             # if prompt_msg.strip().lower().startswith('select'):
             results = cursor.fetchall()
@@ -35,7 +40,7 @@ def reset():
     #create config table  
     msg = '''
     CREATE TABLE TEMPLATES (
-    folder_name VARCHAR(255) PRIMARY KEY,
+    Template_Name VARCHAR(255) PRIMARY KEY,
     PX_Min FLOAT,
     PX_Max FLOAT,
     Horizontal_Limit FLOAT,

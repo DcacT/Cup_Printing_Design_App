@@ -6,7 +6,7 @@ from scipy.optimize import leastsq
 import logging
 class ImageProcessor:
     def __init__(self, template_manager):
-        self.template_folder_name = ""
+        self.template_name = ""
         self.template = {}
         self.template_manager = template_manager
         
@@ -68,10 +68,10 @@ class ImageProcessor:
 
         self.processed_template_image = shape_image if display else self.base_template_image
     
-    def load_template(self, template_folder_name = None, template = None):
+    def load_template(self, template_name = None, template = None):
 
-        self.template_folder_name = template_folder_name if template_folder_name is not None else template['folder_name']
-        self.template = template if template is not None else self.template_manager.templates[template_folder_name] 
+        self.template_name = template_name if template_name is not None else template['folder_name']
+        self.template = template if template is not None else self.template_manager.templates[template_name] 
         logging.debug(f'template: {self.template}')
         self.load_base_template_image()
         self.processed_template_image = self.base_template_image
@@ -80,7 +80,7 @@ class ImageProcessor:
     
     def load_base_template_image(self):
         self_path = os.path.dirname(os.path.realpath(__file__))
-        path = os.path.join(self_path, f'../../data/templates/{self.template_folder_name}/template_image.png', )
+        path = os.path.join(self_path, f'../../data/templates/template_{self.template_name}.png', )
         self.base_template_image = cv2.imread(path, cv2.IMREAD_COLOR)
 
     def get_display_image(self):
