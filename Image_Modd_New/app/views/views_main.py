@@ -5,6 +5,7 @@ from .HomeView import HomeView
 from .NewTempView import NewTemplateView
 from .ConfigTempView import ConfigTemplateView
 from .NewProjView import NewProjView
+from .ConfigProjView import CfgProjView
 
 class View:
     def __init__(self):
@@ -15,6 +16,7 @@ class View:
         self._add_frame(NewTemplateView, "new_template")
         self._add_frame(ConfigTemplateView, "cfg_template")
         self._add_frame(NewProjView, "new_project")
+        self._add_frame(CfgProjView, "cfg_project")
         self._add_frame(HomeView, "home")
 
     def _add_frame(self, Frame, name):

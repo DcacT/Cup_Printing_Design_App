@@ -17,7 +17,10 @@ class HomeView(Frame):
     
         self.new_project_btn = Button(self, text="New Project")
         self.new_project_btn.grid(row=4, column=0, padx=10, pady=10)
-    
+        
+        self.cfg_project_btn = Button(self, text="Modify Project")
+        self.cfg_project_btn.grid(row=5, column=0, padx=10, pady=10)
+        
     def reset(self):
         pass
         

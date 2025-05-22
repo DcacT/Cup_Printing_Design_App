@@ -11,6 +11,7 @@ class HomeController:
         self.frame.new_template_btn.config(command = lambda: self.view.switch("new_template"))
         self.frame.cfg_template_btn.config(command = lambda: self.view.switch("cfg_template"))
         self.frame.new_project_btn.config(command = lambda: self.view.switch("new_project"))
+        self.frame.cfg_project_btn.config(command = lambda: self.view.switch("cfg_project"))
         pass
     #     self.frame.signout_btn.config(command=self.logout)
 

@@ -1,7 +1,7 @@
 from ..sql.sql_helper import sql
 import os 
 import re
-
+from shutil import copy2
 self_path = os.path.dirname(os.path.realpath(__file__))
 
 projects_folder_path = os.path.join(self_path, '../../data/projects')
@@ -9,13 +9,12 @@ projects_folder_path = os.path.join(self_path, '../../data/projects')
 class ProjectManager:
     def __init__(self):
         self.project_list = []
-        self.projects = {}
         self.templates = {}
         self.refresh()
 
     def refresh(self):
-        self.projects = os.listdir(projects_folder_path)
-        
+        self.project_list = os.listdir(projects_folder_path)
+
     def get_project_path(self, project_name):
         return os.path.join(projects_folder_path, project_name)
 
@@ -30,12 +29,15 @@ class ProjectManager:
         print('db_path: ', db_path)
         msg = f'''
         CREATE TABLE project (
-        Image_Name TEXT PRIMARY KEY,
-        x_Percent FLOAT,
-        y_Percent FLOAT,
-        Rotation FLOAT,
-        Scale FLOAT,
-        Order_Index FLOAT
+            Image_ID INTEGER PRIMARY KEY AUTOINCREMENT,
+            Image_Name TEXT,
+            Image_Path TEXT,
+            Show FLOAT DEFAULT 0,
+            x_Percent FLOAT DEFAULT 50,
+            y_Percent FLOAT DEFAULT 50,
+            Rotation FLOAT DEFAULT 0,
+            Scale FLOAT DEFAULT 50,
+            Order_Index INTEGER
         );
         CREATE TABLE settings (
             Project_Name TEXT PRIMARY KEY,
@@ -61,6 +63,31 @@ class ProjectManager:
     def update_project(self, project_params):
         pass
     def new_img(self, project_name, image_path):
+        
+        project_path = self.get_project_path(project_name)
+        db_path = os.path.join(project_path, f'{project_name}.db')
+        msg = f"""
+            INSERT INTO project (
+                Image_Name, Image_Path, Show, x_Percent, y_Percent, Rotation, Scale, Order_Index
+            )
+            VALUES (
+                'DEFAULT_IMAGE_NAME',
+                'DEFAULT_IMAGE_PATH',
+                0, 50, 50, 0, 50,-1
+            );
+        """
+        sql(msg, db_path = db_path)
+        msg = """
+            SELECT COUNT(*) FROM project
+        """
+        print(db_path)
+        
+        idx = sql(msg, db_path = db_path)[0][0]
+        
+        new_image_path = os.path.join(project_path, f'image_{idx}.png')
+
+        copy2 (image_path, new_image_path)
+
         pass
     def delete_project(self, project_name):
         pass

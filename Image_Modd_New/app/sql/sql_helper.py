@@ -15,7 +15,6 @@ def sql(prompt_msg, db_path = db_path):
     try:
         with sqlite3.connect(db_path) as conn:
             cursor = conn.cursor()
-            print(len(prompt_msg.split(';')))
             if len(prompt_msg.split(';')) <= 2:
                 cursor.execute(prompt_msg)
             else: 
