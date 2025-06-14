@@ -60,38 +60,69 @@ class ProjectManager:
         return True
     
 
-    def update_project(self, project_params):
+    def update_project(self, project_name, project_params):
+        
+        project_path = self.get_project_path(project_name)
+        db_path = os.path.join(project_path, f'{project_name}.db')
+    
+        msg = f"""
+            UPDATE project
+            SET
+                Image_Name = {project_params['Image_Name']},
+                Image_Path = {project_params['Image_Path']},
+                Show = {project_params['Show']},
+                x_Percent = {project_params['x_Percent']},
+                y_Percent = {project_params['y_Percent']},
+                Rotation = {project_params['Rotation']},
+                Scale = {project_params['Scale']},
+                Order_Index = {project_params['Order_Index']}
+            WHERE Image_ID = {project_params['Image_ID']};
+            """
+        sql(msg, db_path = db_path)
         pass
+    
     def new_img(self, project_name, image_path):
         
         project_path = self.get_project_path(project_name)
         db_path = os.path.join(project_path, f'{project_name}.db')
+        
+        msg = """
+            SELECT COUNT(*) FROM project
+        """
+        idx = sql(msg, db_path = db_path)[0][0] + 1
+
+
         msg = f"""
             INSERT INTO project (
                 Image_Name, Image_Path, Show, x_Percent, y_Percent, Rotation, Scale, Order_Index
             )
             VALUES (
                 'DEFAULT_IMAGE_NAME',
-                'DEFAULT_IMAGE_PATH',
+                'image_{idx}',
                 0, 50, 50, 0, 50,-1
             );
         """
         sql(msg, db_path = db_path)
-        msg = """
-            SELECT COUNT(*) FROM project
-        """
-        print(db_path)
-        
-        idx = sql(msg, db_path = db_path)[0][0]
-        
         new_image_path = os.path.join(project_path, f'image_{idx}.png')
-
         copy2 (image_path, new_image_path)
+    
+    def get_project_data(self, project_name):
+        project_path = self.get_project_path(project_name)
+        db_path = os.path.join(project_path, f'{project_name}.db')
+        msg = f"""
+            SELECT * FROM project;
+            """
+        data = sql(msg, db_path = db_path)
+        data = [list(row) for row in data]
+        data = sorted(data, key=lambda row: row[7])
+        print('project_data: ',data)
 
-        pass
+        return data
+        
     def delete_project(self, project_name):
         pass
     
+
 
 def is_valid_windows_directory_name(name: str) -> bool:
     if not name or len(name) > 255:

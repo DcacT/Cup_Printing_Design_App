@@ -1,4 +1,4 @@
-from tkinter import Frame, Label, Button, OptionMenu, StringVar
+from tkinter import Frame, Label, Button, OptionMenu, StringVar, Canvas, Scrollbar
 
 class CfgProjView(Frame):
     def __init__(self, *args, **kwargs):
@@ -19,6 +19,37 @@ class CfgProjView(Frame):
         
         self.left_btn_dict = {}
         self.populate_left_frame_with_buttons()
+        
+        
+        self.mid_frame_table_title_frame = Frame(self.mid_frame)
+        self.mid_frame_table_title_frame.pack()
+        table_title = ['ID', 'Name', 'Show', 'X%', 'Y%', 'Rot%', 'Scale%', 'Order_Index']
+        table_title_width = [30,30,30,30,30,30,30,30]
+        for i in range(len(table_title)):
+            title = table_title[i]
+            width = table_title_width[i]
+            Label(self.mid_frame_table_title_frame, text=title).pack(side='left', ipadx=width)
+        
+        self.mid_frame_scrollable_frame_container_frame = Frame(self.mid_frame)
+        self.mid_frame_scrollable_frame_container_frame.pack(fill='both', expand=True)
+        self.mid_frame_scrollable_frame = self.load_scrollable_frame()
+
+    
+    def load_scrollable_frame (self):
+        canvas = Canvas(self.mid_frame_scrollable_frame_container_frame)
+        canvas.pack(side='left', fill='both', expand=True)
+        canvas.bind_all("<MouseWheel>", lambda e: canvas.yview_scroll(-1*(e.delta//120), "units"))
+
+        scrollbar = Scrollbar(self.mid_frame_scrollable_frame_container_frame, orient="vertical", command=canvas.yview)
+        scrollbar.pack(side='right', fill='y')
+        
+        canvas.configure(yscrollcommand=scrollbar.set)
+        canvas.bind('<Configure>', lambda e: canvas.configure(scrollregion=canvas.bbox("all")))
+        
+        scrollable_frame = Frame(canvas)
+        canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
+
+        return scrollable_frame
 
     def populate_left_frame_with_buttons(self):
         btn_list = [
