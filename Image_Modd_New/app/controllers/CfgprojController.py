@@ -1,5 +1,5 @@
-from tkinter import filedialog, Label, Entry, StringVar, messagebox, Frame, Entry, Scale, Checkbutton, Button, IntVar
-
+from tkinter import filedialog, Label, Entry, StringVar, messagebox, Frame, Entry, Scale, Checkbutton, Button, IntVar, TclError
+from functools import partial
 class CfgProjController:
     def __init__(self, model, view):
         self.model = model
@@ -11,8 +11,37 @@ class CfgProjController:
         
     def _bind(self):
         self.frame.left_btn_dict['add_image'].config(command = self.add_image)
+        self.frame.left_btn_dict['delete_project'].config(command = self.delete_project)
+        self.frame.left_btn_dict['home'].config(command=self.go_to_home)
+        self.frame.left_btn_dict['save_project'].config(command = self.update_project)
         pass
 
+    def go_to_home(self):
+        self.populate_project_list_drop_down()
+        self.view.switch("home")
+    
+    def update_project(self):
+        project_name = self.frame.project_name_var.get()
+
+        project_data = [
+            [row[0], row[1].get(), row[2].get(), row[3].get(), row[4].get(), row[5].get(), row[6].get(), row[7].get()]
+            for row in self.project_data]
+
+        res = self.model.project_manager.update_project(project_name, project_data)
+        if res:
+            messagebox.showinfo('Sucess', 'Project Saved! ')
+        else:
+            messagebox.showerror(f'Error', 'Something is wrong: {res}')
+
+
+            
+            
+            
+
+    def delete_project(self):
+        project_name = self.frame.project_name_var.get()
+        self.model.project_manager.delete_project(project_name)
+        print('project_deleted')
         
     def update_image_table(self):
         #clear
@@ -35,29 +64,25 @@ class CfgProjController:
             iamge_show_widget = Checkbutton(t_frame, variable=image_data[2], command=self.refresh_image)
             iamge_show_widget.pack(side='left', ipadx=15)
             
-            
-            image_x_widget = Scale(t_frame, from_=0, to=100, orient="horizontal", command=lambda val: image_data[3].set(val),length=30)
-            image_y_widget = Scale(t_frame, from_=0, to=100, orient="horizontal", command=lambda val: image_data[4].set(val),length=30)
-            image_r_widget = Scale(t_frame, from_=0, to=100, orient="horizontal", command=lambda val: image_data[5].set(val),length=30)
-            image_s_widget = Scale(t_frame, from_=0, to=100, orient="horizontal", command=lambda val: image_data[6].set(val),length=30)
+            vcmd = self.frame.register(self.only_int)
 
-            image_x_widget.set(image_data[3].get())
-            image_y_widget.set(image_data[4].get())
-            image_r_widget.set(image_data[5].get())
-            image_s_widget.set(image_data[6].get())
+            image_x_widget = Entry(t_frame, textvariable=image_data[3], width=15, validate='key', validatecommand= (vcmd, '%P'))
+            image_y_widget = Entry(t_frame, textvariable=image_data[4], width=15, validate='key', validatecommand= (vcmd, '%P'))
+            image_r_widget = Entry(t_frame, textvariable=image_data[5], width=15, validate='key', validatecommand= (vcmd, '%P'))
+            image_s_widget = Entry(t_frame, textvariable=image_data[6], width=15, validate='key', validatecommand= (vcmd, '%P'))
             
-            image_x_widget.pack(side='left', ipadx=40)
-            image_y_widget.pack(side='left', ipadx=40)
-            image_r_widget.pack(side='left', ipadx=40)
-            image_s_widget.pack(side='left', ipadx=40)
+            image_x_widget.pack(side='left')
+            image_y_widget.pack(side='left')
+            image_r_widget.pack(side='left')
+            image_s_widget.pack(side='left')
             
             
            
-            image_idx_widget = Entry(t_frame, textvariable=image_data[7])
-            image_idx_widget.pack(side='left', ipadx=30)
+            image_idx_widget = Entry(t_frame, textvariable=image_data[7],width=15, validate='key', validatecommand= (vcmd, '%P'))
+            image_idx_widget.pack(side='left')
             
 
-
+    
                 
     def refresh_image(self):
         pass
@@ -73,28 +98,63 @@ class CfgProjController:
             menu.add_command(label=option, command=lambda value=option: self.select_project(value))
         
         self.frame.project_name_var.set('Select Project')
+    
+
         
     def select_project(self, project_name):
         self.frame.project_name_var.set(project_name)
         data = self.model.project_manager.get_project_data(project_name)
-        data = [
+        self.project_data = [
             [
                 row[0], 
                 StringVar( value=row[1]), 
-                IntVar( value=row[3]),
-                IntVar( value=row[4]),
-                IntVar( value=row[5]),
-                IntVar( value=row[6]),
-                IntVar( value=row[7]),
-                IntVar( value=row[8]),
+                IntVar( value=int(row[3])),
+                IntVar( value=int(row[4])),
+                IntVar( value=int(row[5])),
+                IntVar( value=int(row[6])),
+                IntVar( value=int(row[7])),
+                IntVar( value=int(row[8])),
             ] 
             for row in data]
-        
-        self.project_data = data
+        project_data_len = len(self.project_data)
+        for row_id, row in enumerate(self.project_data):
+            for i in [2,3,4,5,6]:
+                row[i].trace_add("write", partial(self.validate_range_input,row[i]))
+                
+            row[7].trace_add("write", lambda *args: self.validate_order_input(row[7], row_id, True))
+            
         self.update_image_table()
 
-
+    def validate_order_input(self, check_var, row_id, origin, *args):
         
+        try:
+            value = check_var.get()
+            project_data_len = sum(row[7] != -1 for row in self.project_data)
+            
+            if isinstance(value, int) or value == '-':
+                if not (-1 <= value <= project_data_len):
+                    check_var.set(project_data_len if value > project_data_len else -1)
+                
+        except TclError:
+            print('tclerror')
+            pass  # In case of non-integer input  
+        
+    def validate_range_input(self, check_var,*args):
+        
+        try:
+            value = check_var.get()
+            if isinstance(value, int) or value == '-' or value == '':
+                if not (-1 <= value <= 100):
+                    check_var.set(100 if value > 100 else -1)
+            else: 
+                print('false')
+                check_var.set('-1')
+        except TclError:
+            pass  # In case of non-integer input  
+              
+ 
+    
+    
     def add_image(self):
         if self.frame.project_name_var.get() == "Select Project":
             messagebox.showerror('Error', 'No Project Selected')
@@ -103,3 +163,6 @@ class CfgProjController:
             if file_path:
                 self.model.project_manager.new_img(self.frame.project_name_var.get(), file_path)
                 messagebox.showinfo('Sucess', 'Image added')
+
+    def only_int(self, new_val):
+        return new_val == "" or new_val == "-" or new_val.lstrip('-').isdigit()

@@ -10,7 +10,7 @@ db_path= os.path.join(self_path,'data.db' )
 
 def sql(prompt_msg, db_path = db_path):
     prompt_msg = prompt_msg.rstrip()
-    logger.info(f'Executing SQL: {prompt_msg}')
+    logger.info(f'DB: {db_path} Executing SQL: {prompt_msg}')
     
     try:
         with sqlite3.connect(db_path) as conn:

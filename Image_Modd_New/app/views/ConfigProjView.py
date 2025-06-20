@@ -1,4 +1,4 @@
-from tkinter import Frame, Label, Button, OptionMenu, StringVar, Canvas, Scrollbar
+from tkinter import Frame, Label, Button, OptionMenu, StringVar, Canvas, Scrollbar, Menubutton, RAISED, Menu
 
 class CfgProjView(Frame):
     def __init__(self, *args, **kwargs):
@@ -16,7 +16,9 @@ class CfgProjView(Frame):
         Label(self.left_frame, text="Current Project: ").pack()
         self.project_select_dropdown = OptionMenu(self.left_frame , self.project_name_var, *self.project_list)
         self.project_select_dropdown.pack(padx=5, pady=5)
-        
+
+
+
         self.left_btn_dict = {}
         self.populate_left_frame_with_buttons()
         
@@ -24,7 +26,7 @@ class CfgProjView(Frame):
         self.mid_frame_table_title_frame = Frame(self.mid_frame)
         self.mid_frame_table_title_frame.pack()
         table_title = ['ID', 'Name', 'Show', 'X%', 'Y%', 'Rot%', 'Scale%', 'Order_Index']
-        table_title_width = [30,30,30,30,30,30,30,30]
+        table_title_width = [30,30,30,28,28,28,28,28]
         for i in range(len(table_title)):
             title = table_title[i]
             width = table_title_width[i]
@@ -60,7 +62,6 @@ class CfgProjView(Frame):
             'home' 
         ]
         for btn_text in btn_list:
-            print(' '.join(btn_text.split('_')))
             self.left_btn_dict[btn_text] = Button(self.left_frame, text= ' '.join(btn_text.split('_')))
             self.left_btn_dict[btn_text].pack(padx=10, pady=10)
         

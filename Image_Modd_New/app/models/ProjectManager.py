@@ -1,7 +1,7 @@
 from ..sql.sql_helper import sql
 import os 
 import re
-from shutil import copy2
+import shutil 
 self_path = os.path.dirname(os.path.realpath(__file__))
 
 projects_folder_path = os.path.join(self_path, '../../data/projects')
@@ -47,6 +47,8 @@ class ProjectManager:
         VALUES ('{project_name}', '{template_name}');
         '''
         sql(msg, db_path = db_path)
+        self.refresh()
+
     
     def verify(self, project_name):
         banned_words = ['Project_Name', '']    
@@ -104,24 +106,65 @@ class ProjectManager:
         """
         sql(msg, db_path = db_path)
         new_image_path = os.path.join(project_path, f'image_{idx}.png')
-        copy2 (image_path, new_image_path)
+        shutil.copy2 (image_path, new_image_path)
     
     def get_project_data(self, project_name):
         project_path = self.get_project_path(project_name)
         db_path = os.path.join(project_path, f'{project_name}.db')
+        print(db_path)
         msg = f"""
             SELECT * FROM project;
             """
         data = sql(msg, db_path = db_path)
-        data = [list(row) for row in data]
+        print(data)
+        data = [list(row) for row in data ] if len(data) > 0 else data
         data = sorted(data, key=lambda row: row[7])
         print('project_data: ',data)
 
+    
         return data
+    def update_project(self, project_name, project_data):
+        project_path = self.get_project_path(project_name)
+        db_path = os.path.join(project_path, f'{project_name}.db')
+
+        msg = """"""
+        for row in project_data:
+            
+            n_msg = f"""
+                UPDATE project
+                SET
+                    Image_Name = '{row[1]}',
+                    Show = '{row[2]}',
+                    x_Percent = '{row[3]}',
+                    y_Percent = '{row[4]}',
+                    Rotation ='{row[6]}',
+                    Scale = '{row[6]}',
+                    Order_Index = '{row[7]}'
+                WHERE Image_ID = {row[0]};
+            """
+            msg += n_msg
+        t = sql(msg, db_path = db_path)
+        print(t)
+        return t
+
+        
+        
         
     def delete_project(self, project_name):
-        pass
-    
+        project_path = self.get_project_path(project_name)
+        project_path = os.path.abspath(project_path)
+
+        for filename in os.listdir(project_path):
+            file_path = os.path.join(project_path, filename)
+            try:
+                if os.path.isdir(file_path):
+                    shutil.rmtree(file_path)
+                else:
+                    os.remove(file_path)
+                os.rmdir(project_path)
+            except Exception as e:
+                print(f'Failed to delete {file_path}. Reason: {e}')
+        self.refresh()
 
 
 def is_valid_windows_directory_name(name: str) -> bool:
