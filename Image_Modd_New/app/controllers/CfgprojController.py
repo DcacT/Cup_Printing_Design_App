@@ -1,11 +1,16 @@
 from tkinter import filedialog, Label, Entry, StringVar, messagebox, Frame, Entry, Scale, Checkbutton, Button, IntVar, TclError
 from functools import partial
+from PIL import Image,ImageTk
+import cv2
+resize_ratio = 0.5
 class CfgProjController:
     def __init__(self, model, view):
         self.model = model
         self.view = view
         self.frame = self.view.frames["cfg_project"]
+        
         self.project_data = []
+        self.template_data = {}
         self.populate_project_list_drop_down()
         self._bind()
         
@@ -39,9 +44,15 @@ class CfgProjController:
             
 
     def delete_project(self):
+
         project_name = self.frame.project_name_var.get()
-        self.model.project_manager.delete_project(project_name)
-        print('project_deleted')
+        ok = messagebox.askokcancel("Delete?", f"Are you sure of deleting project {project_name}")
+
+        if ok: 
+            self.model.project_manager.delete_project(project_name)
+            print('project_deleted')
+            messagebox.showinfo('Sucess', 'Project Deleted! ')
+            self.go_to_home()
         
     def update_image_table(self):
         #clear
@@ -85,6 +96,17 @@ class CfgProjController:
     
                 
     def refresh_image(self):
+        
+        template_image = self.template_data[-1]
+        h, w = template_image.shape[:2]
+        
+        img_rgb = cv2.cvtColor(template_image, cv2.COLOR_BGR2RGB)
+        img_resize = cv2.resize(img_rgb, (int(w*resize_ratio), int(h*resize_ratio)) )
+        img_pil = Image.fromarray(img_resize)
+        img_tk = ImageTk.PhotoImage(img_pil)
+        
+        self.frame.img_label.config(image=img_tk)
+        self.frame.img_label.image = img_tk
         pass
 
             
@@ -99,8 +121,14 @@ class CfgProjController:
         
         self.frame.project_name_var.set('Select Project')
     
+    def load_image_from_path(self, path = '', is_template = False):
+        project_name = self.frame.project_name_var.get()
 
-        
+        if is_template:
+            
+            pass
+        else:
+            pass
     def select_project(self, project_name):
         self.frame.project_name_var.set(project_name)
         data = self.model.project_manager.get_project_data(project_name)
@@ -115,8 +143,8 @@ class CfgProjController:
                 IntVar( value=int(row[7])),
                 IntVar( value=int(row[8])),
             ] 
-            for row in data]
-        project_data_len = len(self.project_data)
+            for row in data['project_data']]
+        self.template_data = data['template_data']
         for row_id, row in enumerate(self.project_data):
             for i in [2,3,4,5,6]:
                 row[i].trace_add("write", partial(self.validate_range_input,row[i]))
@@ -124,6 +152,9 @@ class CfgProjController:
             row[7].trace_add("write", lambda *args: self.validate_order_input(row[7], row_id, True))
             
         self.update_image_table()
+        # self.model.project_manager.get_project_data(project_name)
+        self.refresh_image()
+
 
     def validate_order_input(self, check_var, row_id, origin, *args):
         

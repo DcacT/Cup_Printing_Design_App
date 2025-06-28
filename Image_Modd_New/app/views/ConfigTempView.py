@@ -84,9 +84,6 @@ class ConfigTemplateView(Frame):
         self.home_button.grid(row = 2, column = 0)
         pass        
     
-    def load_image_frame(self):
-        img_label = Label(self.right_frame)
-        img_label.pack()
         
     def load_scrollable_frame (self):
         canvas = Canvas(self.middle_frame)

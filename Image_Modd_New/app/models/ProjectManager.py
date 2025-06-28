@@ -2,6 +2,7 @@ from ..sql.sql_helper import sql
 import os 
 import re
 import shutil 
+import cv2
 self_path = os.path.dirname(os.path.realpath(__file__))
 
 projects_folder_path = os.path.join(self_path, '../../data/projects')
@@ -9,7 +10,7 @@ projects_folder_path = os.path.join(self_path, '../../data/projects')
 class ProjectManager:
     def __init__(self):
         self.project_list = []
-        self.templates = {}
+
         self.refresh()
 
     def refresh(self):
@@ -111,18 +112,36 @@ class ProjectManager:
     def get_project_data(self, project_name):
         project_path = self.get_project_path(project_name)
         db_path = os.path.join(project_path, f'{project_name}.db')
-        print(db_path)
         msg = f"""
             SELECT * FROM project;
             """
         data = sql(msg, db_path = db_path)
-        print(data)
-        data = [list(row) for row in data ] if len(data) > 0 else data
+        
+        
+        data = [list(row) + [cv2.imread(os.path.join(project_path, f'{row[2]}.png'), cv2.IMREAD_UNCHANGED )]
+                for row in data 
+                ] if len(data) > 0 else data
         data = sorted(data, key=lambda row: row[7])
-        print('project_data: ',data)
-
+        
+        msg = f"""
+            SELECT Template_Name FROM settings;
+            """
+        
+        template_title = sql(msg, db_path = db_path)[0][0]
+        print(template_title)
+        template_image = cv2.imread(
+            os.path.join(project_path, f'../../templates/template_{template_title}.png', ), cv2.IMREAD_UNCHANGED )
+        
+        
+        msg = f"""
+            SELECT * FROM templates WHERE template_name = '{template_title}';
+            """
+        
+        template_data = sql(msg)
+        data = {'project_data': data, 'template_data': list(template_data[0])+[template_image]}
     
         return data
+    
     def update_project(self, project_name, project_data):
         project_path = self.get_project_path(project_name)
         db_path = os.path.join(project_path, f'{project_name}.db')

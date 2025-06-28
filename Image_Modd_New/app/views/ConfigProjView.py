@@ -36,7 +36,9 @@ class CfgProjView(Frame):
         self.mid_frame_scrollable_frame_container_frame.pack(fill='both', expand=True)
         self.mid_frame_scrollable_frame = self.load_scrollable_frame()
 
-    
+        self.img_label = Label(self.right_frame)
+        self.img_label.pack()
+        
     def load_scrollable_frame (self):
         canvas = Canvas(self.mid_frame_scrollable_frame_container_frame)
         canvas.pack(side='left', fill='both', expand=True)
