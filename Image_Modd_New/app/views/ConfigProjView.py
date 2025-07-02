@@ -1,4 +1,4 @@
-from tkinter import Frame, Label, Button, OptionMenu, StringVar, Canvas, Scrollbar, Menubutton, RAISED, Menu
+from tkinter import Frame, Label, Button, OptionMenu, StringVar, Canvas, Scrollbar, Menubutton, RAISED, Menu,IntVar
 
 class CfgProjView(Frame):
     def __init__(self, *args, **kwargs):
@@ -6,9 +6,15 @@ class CfgProjView(Frame):
         self.project_name_var = StringVar(value="Select Project")
         self.project_list = ['1']
         self.left_frame = Frame(self)
-        self.left_frame.pack(side='left')
+        self.left_frame.pack(side='left', fill='both', expand=True)
+        self.selected_image_id = IntVar(self)
         self.mid_frame = Frame(self)
-        self.mid_frame.pack(side='left')
+        self.mid_frame.pack(side='left', fill='both', expand=True)
+        self.mid_frame_left = Frame(self.mid_frame)
+        self.mid_frame_left.pack(side='left', fill='both', expand=True)
+        self.mid_frame_right = Frame(self.mid_frame)
+        self.mid_frame_right.pack(side='left', fill='both', expand=True)
+        
         self.right_frame = Frame(self)
         self.right_frame.pack(side='left')
     
@@ -23,16 +29,16 @@ class CfgProjView(Frame):
         self.populate_left_frame_with_buttons()
         
         
-        self.mid_frame_table_title_frame = Frame(self.mid_frame)
-        self.mid_frame_table_title_frame.pack()
-        table_title = ['ID', 'Name', 'Show', 'X%', 'Y%', 'Rot%', 'Scale%', 'Order_Index']
-        table_title_width = [30,30,30,28,28,28,28,28]
+        self.mid_frame_table_title_frame = Frame(self.mid_frame_left)
+        self.mid_frame_table_title_frame.pack(side='top', anchor='nw')
+        table_title = ['ID', 'Name', 'Order_Index', 'adjust']
+        table_title_width = [12,50,30,20]
         for i in range(len(table_title)):
             title = table_title[i]
             width = table_title_width[i]
-            Label(self.mid_frame_table_title_frame, text=title).pack(side='left', ipadx=width)
+            Label(self.mid_frame_table_title_frame, text=title, bg = 'blue').pack(side='left', ipadx=width)
         
-        self.mid_frame_scrollable_frame_container_frame = Frame(self.mid_frame)
+        self.mid_frame_scrollable_frame_container_frame = Frame(self.mid_frame_left)
         self.mid_frame_scrollable_frame_container_frame.pack(fill='both', expand=True)
         self.mid_frame_scrollable_frame = self.load_scrollable_frame()
 

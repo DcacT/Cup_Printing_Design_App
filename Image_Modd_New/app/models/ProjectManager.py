@@ -97,12 +97,12 @@ class ProjectManager:
 
         msg = f"""
             INSERT INTO project (
-                Image_Name, Image_Path, Show, x_Percent, y_Percent, Rotation, Scale, Order_Index
+                Image_Name, Image_Path, Order_Index, x_Percent, y_Percent, Rotation, Scale 
             )
             VALUES (
                 'DEFAULT_IMAGE_NAME',
                 'image_{idx}',
-                0, 50, 50, 0, 50,-1
+                -1, 50, 50, 0, 50
             );
         """
         sql(msg, db_path = db_path)
@@ -118,9 +118,18 @@ class ProjectManager:
         data = sql(msg, db_path = db_path)
         
         
-        data = [list(row) + [cv2.imread(os.path.join(project_path, f'{row[2]}.png'), cv2.IMREAD_UNCHANGED )]
-                for row in data 
-                ] if len(data) > 0 else data
+
+        new_data = []
+        if len(data) > 0:
+            for row in data :
+                img = cv2.imread(os.path.join(project_path, f'{row[2]}.png'), cv2.IMREAD_UNCHANGED )
+                height, width = img.shape[:2]
+                center_x = width // 2
+                center_y = height // 2
+                new_data+=[list(row), img,(center_x, center_y) ]
+
+            data = new_data 
+            
         data = sorted(data, key=lambda row: row[7])
         
         msg = f"""
@@ -128,7 +137,6 @@ class ProjectManager:
             """
         
         template_title = sql(msg, db_path = db_path)[0][0]
-        print(template_title)
         template_image = cv2.imread(
             os.path.join(project_path, f'../../templates/template_{template_title}.png', ), cv2.IMREAD_UNCHANGED )
         
@@ -138,7 +146,8 @@ class ProjectManager:
             """
         
         template_data = sql(msg)
-        data = {'project_data': data, 'template_data': list(template_data[0])+[template_image]}
+        data = {
+            'project_data': data, 'template_data': list(template_data[0])+[template_image]}
     
         return data
     
@@ -153,17 +162,15 @@ class ProjectManager:
                 UPDATE project
                 SET
                     Image_Name = '{row[1]}',
-                    Show = '{row[2]}',
+                    Order_Index = '{row[2]}',
                     x_Percent = '{row[3]}',
                     y_Percent = '{row[4]}',
-                    Rotation ='{row[6]}',
-                    Scale = '{row[6]}',
-                    Order_Index = '{row[7]}'
+                    Rotation ='{row[5]}',
+                    Scale = '{row[6]}'
                 WHERE Image_ID = {row[0]};
             """
             msg += n_msg
         t = sql(msg, db_path = db_path)
-        print(t)
         return t
 
         

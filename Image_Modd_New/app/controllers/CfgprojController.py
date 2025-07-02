@@ -8,7 +8,8 @@ class CfgProjController:
         self.model = model
         self.view = view
         self.frame = self.view.frames["cfg_project"]
-        
+        self.vcmd = self.frame.register(self.only_int)
+
         self.project_data = []
         self.template_data = {}
         self.populate_project_list_drop_down()
@@ -21,6 +22,11 @@ class CfgProjController:
         self.frame.left_btn_dict['save_project'].config(command = self.update_project)
         pass
 
+
+    def layer_display_image(self):
+        for image in self.project_data:
+            if []
+
     def go_to_home(self):
         self.populate_project_list_drop_down()
         self.view.switch("home")
@@ -29,14 +35,11 @@ class CfgProjController:
         project_name = self.frame.project_name_var.get()
 
         project_data = [
-            [row[0], row[1].get(), row[2].get(), row[3].get(), row[4].get(), row[5].get(), row[6].get(), row[7].get()]
+            [row[0], row[1].get(), row[2].get(), row[3].get(), row[4].get(), row[5].get(), row[6].get()]
             for row in self.project_data]
 
         res = self.model.project_manager.update_project(project_name, project_data)
-        if res:
-            messagebox.showinfo('Sucess', 'Project Saved! ')
-        else:
-            messagebox.showerror(f'Error', 'Something is wrong: {res}')
+        messagebox.showinfo('Sucess', 'Project Saved! ')
 
 
             
@@ -72,26 +75,53 @@ class CfgProjController:
             image_name_widget = Entry(t_frame, textvariable=image_data[1])
             image_name_widget.pack(side='left', ipadx=15)
 
-            iamge_show_widget = Checkbutton(t_frame, variable=image_data[2], command=self.refresh_image)
-            iamge_show_widget.pack(side='left', ipadx=15)
-            
-            vcmd = self.frame.register(self.only_int)
-
-            image_x_widget = Entry(t_frame, textvariable=image_data[3], width=15, validate='key', validatecommand= (vcmd, '%P'))
-            image_y_widget = Entry(t_frame, textvariable=image_data[4], width=15, validate='key', validatecommand= (vcmd, '%P'))
-            image_r_widget = Entry(t_frame, textvariable=image_data[5], width=15, validate='key', validatecommand= (vcmd, '%P'))
-            image_s_widget = Entry(t_frame, textvariable=image_data[6], width=15, validate='key', validatecommand= (vcmd, '%P'))
-            
-            image_x_widget.pack(side='left')
-            image_y_widget.pack(side='left')
-            image_r_widget.pack(side='left')
-            image_s_widget.pack(side='left')
-            
-            
-           
-            image_idx_widget = Entry(t_frame, textvariable=image_data[7],width=15, validate='key', validatecommand= (vcmd, '%P'))
+            image_idx_widget = Entry(t_frame, textvariable=image_data[2],width=15, validate='key', validatecommand= (self.vcmd, '%P'))
             image_idx_widget.pack(side='left')
+
+            adjust_button = Button(t_frame, text=">>>>>", command=lambda: self.on_select_adjust_btn(image_data[0]))
+            adjust_button.pack(side='left')
+
+            # image_x_widget = Entry(t_frame, textvariable=image_data[3], width=15, validate='key', validatecommand= (self.vcmd, '%P'))
+            # image_y_widget = Entry(t_frame, textvariable=image_data[4], width=15, validate='key', validatecommand= (self.vcmd, '%P'))
+            # image_r_widget = Entry(t_frame, textvariable=image_data[5], width=15, validate='key', validatecommand= (self.vcmd, '%P'))
+            # image_s_widget = Entry(t_frame, textvariable=image_data[6], width=15, validate='key', validatecommand= (self.vcmd, '%P'))
             
+            # image_x_widget.pack(side='left')
+            # image_y_widget.pack(side='left')
+            # image_r_widget.pack(side='left')
+            # image_s_widget.pack(side='left')
+            
+            
+    def on_select_adjust_btn(self, image_id):
+        for widget in self.frame.mid_frame_right.winfo_children():
+            widget.destroy()
+
+        if self.frame.selected_image_id.get() != image_id:
+            self.frame.selected_image_id.set(image_id)
+            image_data = next((row for row in self.project_data if row[0] == image_id), None)
+            image_x_widget = Entry(self.frame.mid_frame_right, textvariable=image_data[3], width=15, validate='key', validatecommand= (self.vcmd, '%P'))
+            
+            image_y_widget = Entry(self.frame.mid_frame_right, textvariable=image_data[4], width=15, validate='key', validatecommand= (self.vcmd, '%P'))
+            
+            image_r_widget = Entry(self.frame.mid_frame_right, textvariable=image_data[5], width=15, validate='key', validatecommand= (self.vcmd, '%P'))
+            
+            image_s_widget = Entry(self.frame.mid_frame_right, textvariable=image_data[6], width=15, validate='key', validatecommand= (self.vcmd, '%P'))
+            
+            Label(self.frame.mid_frame_right, text=f'image name: ').pack()
+            Label(self.frame.mid_frame_right, text=f'{image_data[1].get()}').pack()
+            Label(self.frame.mid_frame_right, text='x%').pack()
+            image_x_widget.pack(side='top')
+            Label(self.frame.mid_frame_right, text='y%').pack()
+
+            image_y_widget.pack(side='top')
+            Label(self.frame.mid_frame_right, text='rotation%').pack()
+
+            image_r_widget.pack(side='top')
+            Label(self.frame.mid_frame_right, text='size%').pack()
+            image_s_widget.pack(side='top')
+            
+        else:
+            self.frame.selected_image_id.set('-69420')
 
     
                 
@@ -141,15 +171,14 @@ class CfgProjController:
                 IntVar( value=int(row[5])),
                 IntVar( value=int(row[6])),
                 IntVar( value=int(row[7])),
-                IntVar( value=int(row[8])),
             ] 
             for row in data['project_data']]
         self.template_data = data['template_data']
         for row_id, row in enumerate(self.project_data):
-            for i in [2,3,4,5,6]:
+            for i in [3,4,5,6]:
                 row[i].trace_add("write", partial(self.validate_range_input,row[i]))
                 
-            row[7].trace_add("write", lambda *args: self.validate_order_input(row[7], row_id, True))
+            row[2].trace_add("write", lambda *args: self.validate_order_input(row[2], row_id, True))
             
         self.update_image_table()
         # self.model.project_manager.get_project_data(project_name)
@@ -160,7 +189,7 @@ class CfgProjController:
         
         try:
             value = check_var.get()
-            project_data_len = sum(row[7] != -1 for row in self.project_data)
+            project_data_len = sum(row[2] != -1 for row in self.project_data)
             
             if isinstance(value, int) or value == '-':
                 if not (-1 <= value <= project_data_len):
@@ -197,3 +226,6 @@ class CfgProjController:
 
     def only_int(self, new_val):
         return new_val == "" or new_val == "-" or new_val.lstrip('-').isdigit()
+
+
+

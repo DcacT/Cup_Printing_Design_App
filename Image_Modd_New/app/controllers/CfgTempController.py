@@ -187,7 +187,6 @@ class CfgTempController:
     
     
     def refresh_img_label(self):
-        
         self.model.image_processor.display_contours(
             target_contour= self.frame.selected_contour_id.get(), 
             highlight_contour_list = self.frame.contour_list[:-1], #omit -1

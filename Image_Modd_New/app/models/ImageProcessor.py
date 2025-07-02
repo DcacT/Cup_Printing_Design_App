@@ -26,6 +26,7 @@ class ImageProcessor:
         gray = cv2.cvtColor(self.base_template_image, cv2.COLOR_BGR2GRAY)
         edges = cv2.Canny(gray, 100, 200)    
         contours, _ = cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        print('len of contours: ',len(contours))
         new_contours = []
         for contour in contours:
             if (len(contour) > self.get_config('PX_Min') 
@@ -38,6 +39,8 @@ class ImageProcessor:
                     or (self.get_config('Horizontal_Limit') == -1 and self.get_config('Vertical_Limit') == -1)):
                     new_contours.append(contour)
         self.all_contours = new_contours
+        print('len of all_contours: ',len(new_contours))
+        print('self.template: ', self.template)
         
     def display_contours(self, target_contour= -1, highlight_contour_list = [], display = True):
         highlight_index_list = highlight_contour_list
@@ -158,10 +161,10 @@ class ImageProcessor:
     def display_border(self, display = False):
         if display:
             #potential bug where value is actually -1.0
-            display_arc1 = '-1' not in [self.template['Arc_1_x'], self.template['Arc_1_y'], self.template['Arc_1_r']]
-            display_arc2 = '-1' not in [self.template['Arc_2_x'], self.template['Arc_2_y'], self.template['Arc_2_r']]
-            display_line1 = '-1' not in [self.template['Line_1_vx'], self.template['Line_1_vy'], self.template['Line_1_x0'], self.template['Line_1_y0']]
-            display_line2 = '-1' not in [self.template['Line_2_vx'], self.template['Line_2_vy'], self.template['Line_2_x0'], self.template['Line_2_y0'], ]
+            display_arc1 = -1 not in [self.template['Arc_1_x'], self.template['Arc_1_y'], self.template['Arc_1_r']]
+            display_arc2 = -1 not in [self.template['Arc_2_x'], self.template['Arc_2_y'], self.template['Arc_2_r']]
+            display_line1 = -1 not in [self.template['Line_1_vx'], self.template['Line_1_vy'], self.template['Line_1_x0'], self.template['Line_1_y0']]
+            display_line2 = -1 not in [self.template['Line_2_vx'], self.template['Line_2_vy'], self.template['Line_2_x0'], self.template['Line_2_y0'], ]
             self.apply_arc(display_arc1, display_arc2)
             self.apply_straight(display_line1, display_line2)
 
