@@ -23,9 +23,9 @@ class CfgProjController:
         pass
 
 
-    def layer_display_image(self):
-        for image in self.project_data:
-            if []
+    # def layer_display_image(self):
+    #     for image in self.project_data:
+    #         if []
 
     def go_to_home(self):
         self.populate_project_list_drop_down()
