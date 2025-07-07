@@ -15,10 +15,11 @@ class Project:
         self.project_data = {}
         self.template_data = {}
         
-        self.project_path = self.get_project_path(project_name)
-        self.db_path = self.get_project_db_path(project_name)
-        
-        self.refresh()            
+        if project_name != None:
+            self.project_path = self.get_project_path(project_name)
+            self.db_path = self.get_project_db_path(project_name)
+            
+            self.read_project(project_name)            
         
         
     # def refresh(self):
@@ -48,7 +49,6 @@ class Project:
         VALUES ('{project_name}', '{template_name}');
         '''
         sql(msg, db_path = self.db_path)
-        
         
     def read_project(self):
         msg = 'SELECT template_name FROM settings'
@@ -142,6 +142,11 @@ class Project:
         self.project_path = ''
         self.db_path = ''
         
+        pass
+    
+    def add_image(self):
+        pass
+    def display_image(self):
         pass
     
     

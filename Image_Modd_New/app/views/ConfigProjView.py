@@ -2,6 +2,7 @@ from tkinter import Frame, Label, Button, OptionMenu, StringVar, Canvas, Scrollb
 
 class CfgProjView(Frame):
     def __init__(self, *args, **kwargs):
+        
         super().__init__(*args, **kwargs)
         self.project_name_var = StringVar(value="Select Project")
         self.project_list = ['1']
