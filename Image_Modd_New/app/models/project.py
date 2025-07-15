@@ -60,6 +60,8 @@ class Project:
             return False
         
     def read_project(self):
+        self.project_data = {}
+        self.template_data = {}
         msg = 'SELECT template_name FROM settings'
         template_name = sql(msg, db_path = self.db_path)[0][0]
         template_image = read_image(os.path.join(self.project_path, f'../../templates/template_{template_name}.png'))
@@ -114,7 +116,6 @@ class Project:
             self.project_data[row[0]]['y_Percent'].trace_add("write", partial(self.validate_range_input, self.project_data[row[0]]['y_Percent']))
             self.project_data[row[0]]['Rotation'].trace_add("write", partial(self.validate_range_input, self.project_data[row[0]]['Rotation']))
             self.project_data[row[0]]['Scale'].trace_add("write", partial(self.validate_range_input, self.project_data[row[0]]['Scale']))
-            # self.project_data[row[0]]['Order_Index'].trace_add("write", partial(self.validate_order_input, self.project_data[row[0]]['Order_Index']))
         
         pass
     
@@ -186,6 +187,20 @@ class Project:
 
         pass
     
+    def delete_image(self, image_id):
+        #delete sql
+        msg = f'DELETE FROM project WHERE Image_ID = {image_id};'
+        sql(msg, self.db_path)
+
+        #delete file
+        path = self.project_data[image_id]['Image_Path'].get()
+        os.remove(os.path.join(self.project_path, f'{path}.png'))
+        
+        self.read_project()  
+
+        #update_project
+        
+        
     def get_display_image(self):
         #order_idx
         #for loop
@@ -196,14 +211,15 @@ class Project:
         display_image = template_image
         
         stacking_id = [[id, data['Order_Index'].get()] for id, data in self.project_data.items() if data['Order_Index'].get() != -1]
-        arr = np.array(stacking_id)
-        sorted_stacking_id = arr[arr[:, 1].argsort()]
+        sorted_stacking_id = sorted(stacking_id, key=lambda row: row[1])
         
-
-        print(self.project_data.keys())
-        new_img = self.project_data[1]['Image']
+        stack_image = template_image
         
-        return self.stack_image(template_image, new_img)
+        for id, _ in sorted_stacking_id:
+            new_img = self.project_data[id]['Image']
+            self.stack_image(stack_image, new_img)
+        
+        return stack_image
         
     def stack_image(self, base_image, top_image):
         # diff_x = top_image_center[0] - base_image_center[0]
@@ -211,11 +227,21 @@ class Project:
         h, w = top_image.shape[:2]        
 
         top_image_resize = cv2.resize(top_image, (int(w*resize_ratio), int(h*resize_ratio)) )
+        
         top_image_height, top_image_width = top_image_resize.shape[:2]
         
-        print('size_of_top_img: ', top_image_resize.shape[:2])
-        print('size_of_base_img: ', base_image.shape[:2])
-        base_image[0:top_image_height, 0:top_image_width] = top_image_resize
+        rgb = top_image_resize[:, :, :3].astype(np.uint16)
+        alpha = top_image_resize[:, :, 3].astype(np.uint16)
+        
+        x = 0
+        y = 0
+        roi = base_image[y:y+top_image_height, x:x+top_image_width].astype(np.uint16)
+        
+        for channel in range(3): #rbg
+            roi[:,:,channel] = (rgb[:, :, channel] * alpha + roi[:, :, channel] * (255 - alpha)) // 255
+            
+        base_image[y:y+top_image_height, x:x+top_image_width] = roi.astype(np.uint8)
+        # base_image[0:top_image_height, 0:top_image_width] = top_image_resize
 
         return base_image
     
@@ -307,16 +333,6 @@ class Project:
         except TclError:
             pass  # In case of non-integer input  
         
-    def validate_order_input(self, check_var, *args):
-        order_list = []
-        for id, value in self.project_data.items():
-            if value['Order_Index']!= -1:
-                order_list.append([id, value])
-        order_list = sorted(order_list, key=lambda x: x[1])
-        
-        if check_var.get() == -1:
-            check_var.set(-1)
-            
 
 
         

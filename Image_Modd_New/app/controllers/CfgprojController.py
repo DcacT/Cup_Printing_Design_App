@@ -51,8 +51,10 @@ class CfgProjController:
         
     def update_image_table(self):
         #clear
-        
+        self.model.project.read_project()  
+        print(self.model.project.project_data.keys())
         for widget in self.frame.mid_frame_scrollable_frame.winfo_children():
+            print('d')
             widget.destroy()
         
         for id, image_data in self.model.project.project_data.items():
@@ -66,8 +68,8 @@ class CfgProjController:
             image_name_widget = Entry(t_frame, textvariable=image_data['Image_Name'])
             image_name_widget.pack(side='left', ipadx=15)
 
-            image_idx_widget = Entry(t_frame, textvariable=image_data['Order_Index'],width=15, validate='key', validatecommand= (self.vcmd, '%P'))
-            image_idx_widget.pack(side='left')
+            image_idx_widget = Label(t_frame, textvariable=image_data['Order_Index']) 
+            image_idx_widget.pack(side='left', ipadx=15)
 
             adjust_button = Button(t_frame, text=">>>>>", command=partial(self.on_select_adjust_btn, image_id = image_data['Image_ID'].get()))
             adjust_button.pack(side='left')
@@ -95,6 +97,7 @@ class CfgProjController:
             order_idx_adjust_up_btn = Button(order_idx_adjust_frame, text = f'{" "*t}↑{" "*t}', command=lambda: self.on_select_order_idx_adjust_btn(direction_up=True))
             order_idx_adjust_dn_btn = Button(order_idx_adjust_frame, text = f'{" "*t}↓{" "*t}', command=lambda: self.on_select_order_idx_adjust_btn(direction_up=False))
             
+            image_delete_btn = Button(self.frame.mid_frame_right, text = f'Delete Image', command=lambda: self.on_select_delete_image())
 
 
             Label(self.frame.mid_frame_right, text=f'image name: ').pack()
@@ -118,14 +121,24 @@ class CfgProjController:
             order_idx_adjust_up_btn.pack(side='left')
             order_idx_adjust_dn_btn.pack(side='left')
             
+            Label(self.frame.mid_frame_right, text=f' ').pack()
+
+            image_delete_btn.pack()
+            
         else:
             self.frame.selected_image_id.set('-69420')
             
 
+    def on_select_delete_image(self ):
+        image_id = self.frame.selected_image_id.get()
+        if messagebox.askokcancel('Delete Image', 'Are you sure about deleting this image?'):
+            self.model.project.delete_image(image_id)
+            self.update_image_table()
+
+
     def on_select_order_idx_adjust_btn(self, direction_up = True):
         
         image_id = self.frame.selected_image_id.get()
-        
         self.model.project.update_order_idx(image_id, direction_up)
         # self.refresh_image()
                 
@@ -162,7 +175,7 @@ class CfgProjController:
         self.model.project.load_project(project_name)
         
         self.update_image_table()
-        # self.refresh_image()
+        self.refresh_image()
 
     def add_image(self):
         if self.frame.project_name_var.get() == "Select Project":
