@@ -2,8 +2,12 @@ from tkinter import filedialog, messagebox, StringVar
 from os.path import isfile
 import cv2
 from PIL import Image, ImageTk
+import re
 import os 
 resize_ratio = 0.5
+self_path = os.path.dirname(os.path.realpath(__file__))
+projects_folder_path = os.path.join(self_path, '../../data/projects')
+
 class NewProjController:
     def __init__(self, model, view):
         self.model = model
@@ -24,7 +28,6 @@ class NewProjController:
         return self.frame.project_name_var.get()
     
     def load_template_select_dropdown(self):
-        print(self.model.template_manager.templates)
         self.frame.template_list = self.model.template_manager.templates.keys()
         menu = self.frame.template_select_dropdown['menu']
         menu.delete(0, "end")
@@ -53,16 +56,55 @@ class NewProjController:
     def on_select_new_project(self):
         new_project_name = self.frame.project_name_var.get()
         template_name = self.frame.template_name_var.get()
-        #verify project name
-        verify = self.model.project_manager.verify(new_project_name)
-        if not verify:
+        #verify project name.
+        print(template_name)
+        if template_name == 'Select Template':
+            messagebox.showerror('Error', "Please Select a template first")
+            return        
+
+        if not verify(new_project_name):
             messagebox.showerror('Error', "Invalid Project Name! Try Another One")
             return        
          
-        self.model.project_manager.new_project(new_project_name, template_name)
-        messagebox.showinfo('Success', "Project Created! Head over to Project Configuration next to configure via Home please")
+        if self.model.project.create_project(new_project_name, template_name):
+            messagebox.showinfo('Success', "Project Created! Head over to Project Configuration next to configure via Home please")
     
+    
+def verify(project_name):
+    banned_words = ['Project_Name', '']    
+    if project_name in banned_words:
+        return False
+    if not is_valid_windows_directory_name(project_name):
+        return False
+    project_list = os.listdir(projects_folder_path)
+    if project_name in project_list:
+        return False
+    return True
 
+
+def is_valid_windows_directory_name(name: str) -> bool:
+    if not name or len(name) > 255:
+        return False
+
+    # Check for invalid characters
+    if re.search(r'[<>:"/\\|?*]', name):
+        return False
+
+    # Reserved names (case-insensitive)
+    reserved = {
+        "CON", "PRN", "AUX", "NUL",
+        *["COM" + str(i) for i in range(1, 10)],
+        *["LPT" + str(i) for i in range(1, 10)]
+    }
+    name_upper = name.upper().split('.')[0]  # Remove extension if any
+    if name_upper in reserved:
+        return False
+
+    # No trailing space or period
+    if name[-1] in {' ', '.'}:
+        return False
+
+    return True
 
 
 # #items

@@ -1,11 +1,12 @@
-from tkinter import Frame, Label, Button, OptionMenu, StringVar, Canvas, Scrollbar, Menubutton, RAISED, Menu,IntVar
+from tkinter import Frame, Label, Button, OptionMenu, BooleanVar, StringVar, Canvas, Scrollbar, Menubutton, RAISED, Menu,IntVar
 
 class CfgProjView(Frame):
     def __init__(self, *args, **kwargs):
         
         super().__init__(*args, **kwargs)
+        
+        self.reset_trigger = BooleanVar(value=False)
         self.project_name_var = StringVar(value="Select Project")
-        self.project_list = ['1']
         self.left_frame = Frame(self)
         self.left_frame.pack(side='left', fill='both', expand=True)
         self.selected_image_id = IntVar(self)
@@ -21,7 +22,7 @@ class CfgProjView(Frame):
     
         Label(self.left_frame, text="Edit Project").pack()
         Label(self.left_frame, text="Current Project: ").pack()
-        self.project_select_dropdown = OptionMenu(self.left_frame , self.project_name_var, *self.project_list)
+        self.project_select_dropdown = OptionMenu(self.left_frame , self.project_name_var, *['error'])
         self.project_select_dropdown.pack(padx=5, pady=5)
 
 
@@ -75,6 +76,7 @@ class CfgProjView(Frame):
             self.left_btn_dict[btn_text].pack(padx=10, pady=10)
         
     def reset(self):
+        self.reset_trigger.set(not self.reset_trigger.get())
         pass
         
 ###

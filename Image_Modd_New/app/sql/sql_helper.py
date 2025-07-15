@@ -26,7 +26,8 @@ def sql(prompt_msg, db_path = db_path):
             return results
             
     except sqlite3.Error as e:
-        logger.error(f"SQLite error: {e}")
+        
+        logger.error(f"SQLite error: {e};\nmsg: {prompt_msg}")
         return e
         # raise
 
