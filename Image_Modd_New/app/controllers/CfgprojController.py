@@ -45,16 +45,13 @@ class CfgProjController:
 
         if ok: 
             self.model.project.delete_project()
-            print('project_deleted')
             messagebox.showinfo('Sucess', 'Project Deleted! ')
             self.go_to_home()
         
     def update_image_table(self):
         #clear
         self.model.project.read_project()  
-        print(self.model.project.project_data.keys())
         for widget in self.frame.mid_frame_scrollable_frame.winfo_children():
-            print('d')
             widget.destroy()
         
         for id, image_data in self.model.project.project_data.items():
@@ -125,8 +122,10 @@ class CfgProjController:
 
             image_delete_btn.pack()
             
+            self.refresh_image()
+
         else:
-            self.frame.selected_image_id.set('-69420')
+            self.frame.selected_image_id.set('-1')
             
 
     def on_select_delete_image(self ):
@@ -140,12 +139,14 @@ class CfgProjController:
         
         image_id = self.frame.selected_image_id.get()
         self.model.project.update_order_idx(image_id, direction_up)
+        self.refresh_image()
         # self.refresh_image()
                 
     def refresh_image(self):
         
         # template_image = self.model.project.template_data['template_image']
-        template_image = self.model.project.get_display_image()
+        print('image_id: ', self.frame.selected_image_id.get())
+        template_image = self.model.project.get_display_image(self.frame.selected_image_id.get())
         
         h, w = template_image.shape[:2]        
         

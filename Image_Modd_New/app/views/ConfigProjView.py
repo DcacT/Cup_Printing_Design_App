@@ -9,7 +9,7 @@ class CfgProjView(Frame):
         self.project_name_var = StringVar(value="Select Project")
         self.left_frame = Frame(self)
         self.left_frame.pack(side='left', fill='both', expand=True)
-        self.selected_image_id = IntVar(self)
+        self.selected_image_id = IntVar(value=-1)
         self.mid_frame = Frame(self)
         self.mid_frame.pack(side='left', fill='both', expand=True)
         self.mid_frame_left = Frame(self.mid_frame)

@@ -6,6 +6,7 @@ import cv2
 from functools import partial
 from tkinter import StringVar, IntVar, TclError, messagebox
 import numpy as np
+import math 
 
 self_path = os.path.dirname(os.path.realpath(__file__))
 projects_folder_path = os.path.join(self_path, '../../data/projects')
@@ -16,6 +17,7 @@ class Project:
         self.project_name = None
         self.project_data = {}
         self.template_data = {}
+        self.template_grid_data = {}
         
     def load_project(self, project_name):
         self.project_name = project_name
@@ -33,8 +35,6 @@ class Project:
             self.db_path = self.get_project_db_path(self.project_name)
             
             os.makedirs(self.project_path)
-            print(self.project_path)
-            print(self.db_path)
             msg = f'''
             CREATE TABLE project (
                 Image_ID INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -62,6 +62,8 @@ class Project:
     def read_project(self):
         self.project_data = {}
         self.template_data = {}
+        self.template_grid_data = {}
+        
         msg = 'SELECT template_name FROM settings'
         template_name = sql(msg, db_path = self.db_path)[0][0]
         template_image = read_image(os.path.join(self.project_path, f'../../templates/template_{template_name}.png'))
@@ -92,12 +94,11 @@ class Project:
             'Arc_2_r': template_data[18],
             'template_image_center': get_image_center(template_image)
         }
-        
+        self.calc_template_grid_data()
         msg = f'SELECT * FROM project'
         
         project_data = sql(msg, db_path = self.db_path)
-        # print(project_data)
-        # project_data = list(project_data[0]) if len(project_data) > 0  else []
+        
         for row in project_data:
             img = self.read_project_image(row[2])
             self.project_data[row[0]] = {
@@ -201,11 +202,14 @@ class Project:
         #update_project
         
         
-    def get_display_image(self):
+    def get_display_image(self, selected_image_id = None):
         #order_idx
         #for loop
         #get position
+        #perform transformation
+        
         #layer atop
+        #resize
         
         template_image = self.template_data['template_image']
         display_image = template_image
@@ -218,6 +222,8 @@ class Project:
         for id, _ in sorted_stacking_id:
             new_img = self.project_data[id]['Image']
             self.stack_image(stack_image, new_img)
+            
+        stack_image = self.draw_reference_line(stack_image, selected_image_id)
         
         return stack_image
         
@@ -245,6 +251,147 @@ class Project:
 
         return base_image
     
+    def draw_reference_line(self, base_image, image_id):
+            
+        if self.check_tempalte_complete:
+            #draw template_arcs
+            reference_line_color = (127, 255, 0)
+            cv2.circle(base_image, 
+                        (int(self.template_data['Arc_1_x']), int(self.template_data['Arc_1_y'])), 
+                        int(self.template_data['Arc_1_r']), reference_line_color, 2)
+            
+            cv2.circle(base_image, 
+                        (int(self.template_data['Arc_2_x']), int(self.template_data['Arc_2_y'])), 
+                        int(self.template_data['Arc_2_r']) ,reference_line_color, 2)
+
+            #draw template_sides
+            height, width = base_image.shape[:2]
+            line_length = max(width, height)
+            x0 = float(self.template_data['Line_1_x0'])
+            y0 = float(self.template_data['Line_1_y0'])
+            vx = float(self.template_data['Line_1_vx'])
+            vy = float(self.template_data['Line_1_vy'])
+            
+            line_x1, line_y1 = int(x0 - vx * line_length), int(y0 - vy * line_length)
+            line_x2, line_y2 = int(x0 + vx * line_length), int(y0 + vy * line_length)
+            
+            cv2.line(base_image, (line_x1, line_y1), (line_x2, line_y2), reference_line_color, 2)  
+        
+            x0 = float(self.template_data['Line_2_x0'])
+            y0 = float(self.template_data['Line_2_y0'])
+            vx = float(self.template_data['Line_2_vx'])
+            vy = float(self.template_data['Line_2_vy'])
+            line_x1, line_y1 = int(x0 - vx * line_length), int(y0 - vy * line_length)
+            line_x2, line_y2 = int(x0 + vx * line_length), int(y0 + vy * line_length)
+            cv2.line(base_image, (line_x1, line_y1), (line_x2, line_y2), reference_line_color, 2) 
+             
+            if image_id is not -1:
+                #draw_image_percent_line
+                
+                cross_line_color = (255, 20, 147)                
+                x_percent = self.project_data[image_id]['x_Percent'].get()
+                line_x1 = self.template_grid_data['line_x1']
+                line_y1 = self.template_grid_data['line_y1']
+                
+                diff = self.template_grid_data['diff']
+                angle_base = self.template_grid_data['angle_base']
+                angle_delta = angle_base + diff * (x_percent/100)
+
+                line_length = line_y1
+                line_x2 = int(line_x1 - line_length * math.cos(angle_delta))
+                line_y2 = int(line_y1 + line_length * math.sin(angle_delta))  
+                
+                
+                print('x: ', x_percent)
+                print("angle (degrees):", math.degrees(angle_delta))
+                angle1 = math.atan2(float(self.template_data['Line_1_vx']), float(self.template_data['Line_1_vy']))
+                angle2 = math.atan2(float(self.template_data['Line_2_vx']), float(self.template_data['Line_2_vy']))
+                
+                print("angle1 (degrees):", math.degrees(angle1))
+                print("angle2 (degrees):", math.degrees(angle2))
+                print('line_x1: ', line_x1)
+                print('line_y1: ', line_y1)
+                print('line_x2: ', line_x2)
+                print('line_y2: ', line_y2)
+                print('shape_of_img: ', base_image.shape[:2])
+
+                cv2.line(base_image, (int(line_x1), int(line_y1)), (int(line_x2), int(line_y2)), cross_line_color, 2) 
+
+                #y_percent
+                r = int(self.template_data['Arc_2_r']) + ((int(self.template_data['Arc_1_r']) - int(self.template_data['Arc_2_r'])) *( self.project_data[image_id]['y_Percent'].get()/100))
+                cv2.circle(base_image, 
+                           (self.template_grid_data['arc_x']//2, self.template_grid_data['arc_y']//2), 
+                           int(r),
+                           cross_line_color, 2)
+            
+        
+        return base_image
+    
+    def translate_percent_to_coord(self, image_id):
+        x_percent = self.project_data[image_id]['x_Percent'].get()
+        line_x1 = self.template_grid_data['line_x1']
+        line_y1 = self.template_grid_data['line_y1']
+        
+        diff = self.template_grid_data['diff']
+        angle_base = self.template_grid_data['angle_base']
+        angle_delta = angle_base + diff * (x_percent/100)
+
+        line_x2 = int(line_x1 + line_y1 * math.cos(angle_delta))
+        line_y2 = int(line_y1 - line_y1 * math.sin(angle_delta)) 
+        
+        arc_x = self.template_grid_data['arc_x']
+        arc_y = self.template_grid_data['arc_y']
+        arc_r = int(self.template_data['Arc_2_r']) + ((int(self.template_data['Arc_1_r']) - int(self.template_data['Arc_2_r'])) *( self.project_data[image_id]['y_Percent'].get()/100))
+
+        dx = line_x2 - line_x1
+        dy = line_y2 - line_y1
+
+        a = dx**2 + dy**2
+        b = 2 * (line_x1 * dx + line_y1 * dy)
+        c = line_x1**2 + line_y1**2 - arc_r**2
+
+        # Guaranteed: discriminant > 0
+        discriminant = b**2 - 4 * a * c
+        sqrt_disc = np.sqrt(discriminant)
+
+        t1 = (-b + sqrt_disc) / (2 * a)
+        t2 = (-b - sqrt_disc) / (2 * a)
+
+        # Convert back to original coordinates
+        ix1 = line_x1 + t1 * dx + arc_x
+        iy1 = line_y1 + t1 * dy + arc_y
+        ix2 = line_x1 + t2 * dx + arc_x
+        iy2 = line_y1 + t2 * dy + arc_y
+
+        
+        return (ix1, iy1) if iy1 >= iy2 else (ix2, iy2)
+        
+        
+    def calc_template_grid_data(self):
+        
+        line_x1 = (self.template_data['Arc_1_x'] + self.template_data['Arc_2_x'])//2
+        line_y1 = (self.template_data['Arc_1_y'] + self.template_data['Arc_2_y'])//2
+
+        angle1 = math.atan2(float(self.template_data['Line_1_vx']), float(self.template_data['Line_1_vy']))
+        angle2 = math.atan2(float(self.template_data['Line_2_vx']), float(self.template_data['Line_2_vy']))
+        diff = (angle1 - angle2 + math.pi) % (2 * math.pi) - math.pi
+        
+        arc_x = int(self.template_data['Arc_1_x']) + int(self.template_data['Arc_2_x']) 
+        arc_y = int(self.template_data['Arc_2_y']) + int(self.template_data['Arc_2_y'])
+        
+        self.template_grid_data = {
+            'line_x1': line_x1,
+            'line_y1': line_y1,
+            'angle_base': angle2,
+            'diff': diff,
+            'arc_x': arc_x,
+            'arc_y': arc_y,
+        }
+        
+        pass
+
+
+    
     def update_order_idx(self, image_id, direction_up):
     
 
@@ -261,15 +408,11 @@ class Project:
         # condition 3(replace): order_index above 0 and not -1 -> exchange order_index between image_id and image_id with order_index-1
         # 
         # ###
-        print('image_id',': ', image_id)
         if direction_up:
-            
             len_of_proj_data = len([1 for v in self.project_data.values()])
             len_of_no_show_list = len([1 for v in self.project_data.values() if v['Order_Index'].get() == -1])
             len_of_show_list = len_of_proj_data - len_of_no_show_list
-            print('len: ', len_of_proj_data)
-            print('len: ', len_of_no_show_list)
-            print('len: ', len_of_show_list)
+
 
             if current_idx >= (len_of_show_list - 1) and current_idx != -1:
                 pass
@@ -295,7 +438,6 @@ class Project:
                 pass
             
             elif current_idx == 0:
-                print('here')
                 self.project_data[image_id]['Order_Index'].set(-1)
                 
                 for key, val in self.project_data.items():
@@ -328,14 +470,30 @@ class Project:
                 if not (-1 <= value <= 100):
                     check_var.set(100 if value > 100 else -1)
             else: 
-                print('false')
                 check_var.set('-1')
         except TclError:
             pass  # In case of non-integer input  
         
-
-
-        
+    def check_tempalte_complete(self):
+        return False if -1 in [
+            self.template_data['Line_1_vx'],
+            self.template_data['Line_1_vy'],
+            self.template_data['Line_1_x0'],
+            self.template_data['Line_1_y0'],
+            
+            self.template_data['Line_2_vx'],
+            self.template_data['Line_2_vy'],
+            self.template_data['Line_2_x0'],
+            self.template_data['Line_2_y0'],
+            
+            self.template_data['Arc_1_x'],
+            self.template_data['Arc_1_y'],
+            self.template_data['Arc_1_r'],
+            
+            self.template_data['Arc_2_x'],
+            self.template_data['Arc_2_y'],
+            self.template_data['Arc_2_r'],
+        ] else True
         
 def verify(project_name):
     banned_words = ['Project_Name', '']    
