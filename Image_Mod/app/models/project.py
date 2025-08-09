@@ -445,7 +445,7 @@ class Project:
         
         #prep template
         template_image = self.template_data['template_image']
-        h, w = template_image.shape[:2]
+        main_height, main_width = template_image.shape[:2]
         center_x = (int(self.template_data['Arc_1_x']) + int(self.template_data['Arc_2_x']))//2
         center_y = (int(self.template_data['Arc_2_y']) + int(self.template_data['Arc_2_y']))//2
         
@@ -456,29 +456,33 @@ class Project:
 
         for id, _ in sorted_stacking_id:
             #resize & rotate
-            img, width, height = self.rotate_and_resize_sub_img(id)
+            img, sub_width, sub_height = self.rotate_and_resize_sub_img(id)
             
             #crop top and bottom            
                     
             r = self.template_data['Arc_2_r'] + (
                 (self.template_data['Arc_1_r'] - self.template_data['Arc_2_r']) * (self.project_data[id]['y_Percent'].get()/100))
-            print(f'r1: {r1}')
-            print(f'r2: {r2}')
-            print(f'r: {r}')
+
             end_x, end_y = self.get_sub_image_pos(id, 
                                                   r,
                                                   center_x, 
                                                   center_y)
-            print(f'end_x: {end_x}')
-            print(f'end_y: {end_y}')
-            print(f'center_x: {center_x}')
-            print(f'center_y: {center_y}')
-            # end_x = end_x-(width//2)
-            # end_y = end_y-(height//2)
-            # print(f'end_x: {end_x}')
-            # print(f'end_y: {end_y}')
-            # print(f'center_x: {center_x}')
-            # print(f'center_y: {center_y}')
+
+            end_x = end_x-(sub_width//2)
+            end_y = end_y-(sub_height//2)
+
+            if end_x - (sub_width//2) < 0: #crop_left
+                img = img[(end_x - (sub_width//2)):, :]
+
+            if end_x + (sub_width//2) > main_width: #crop_right
+                img = img[:-(end_x + (sub_width//2) - main_width), :]
+
+            if end_y - (sub_height//2) < 0: #crop top
+                img = img[(end_y - (sub_height//2)):, :]
+
+            if end_y + (sub_height//2) > main_height:
+                img = img[:-(end_y + (sub_height//2) - main_height), :]
+
             rgb = img[:, :, :3].astype(np.uint16)
             alpha = img[:, :, 3].astype(np.uint16)
 
